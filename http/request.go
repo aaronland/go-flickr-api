@@ -10,6 +10,8 @@ func NewOAuth1AuthorizeTokenHandler(token_ch chan *auth.AuthorizationToken, err_
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
 
+		defer req.Body.Close()
+
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
