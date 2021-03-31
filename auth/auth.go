@@ -1,5 +1,7 @@
 package auth
 
+// https://www.flickr.com/services/api/auth.oauth.html
+
 import (
 	"fmt"
 	"net/url"

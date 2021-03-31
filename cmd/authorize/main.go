@@ -31,6 +31,8 @@ func main() {
 		log.Fatalf("Failed to parse '%s', %v", addr, err)
 	}
 
+	cb_url.Scheme = "http"
+
 	ctx := context.Background()
 
 	cl, err := client.NewHTTPClient(ctx, *client_uri)
