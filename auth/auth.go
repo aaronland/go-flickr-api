@@ -18,10 +18,8 @@ type AuthorizationToken struct {
 }
 
 type AccessToken struct {
-	Token    string `json:"oath_token"`
-	Secret   string `json:"oauth_token_secret"`
-	NSID     string `json:"user_nsid"`
-	Username string `json:"username"`
+	Token  string `json:"oauth_token"`
+	Secret string `json:"oauth_token_secret"`
 }
 
 func UnmarshalRequestToken(str_q string) (*RequestToken, error) {
@@ -89,8 +87,6 @@ func UnmarshalAccessToken(str_q string) (*AccessToken, error) {
 	required := []string{
 		"oauth_token",
 		"oauth_token_secret",
-		"user_nsid",
-		"username",
 	}
 
 	_, err = ensureQueryParameters(q, required...)
@@ -100,10 +96,8 @@ func UnmarshalAccessToken(str_q string) (*AccessToken, error) {
 	}
 
 	tok := &AccessToken{
-		Token:    q.Get("oauth_token"),
-		Secret:   q.Get("oauth_token_secret"),
-		NSID:     q.Get("user_nsid"),
-		Username: q.Get("username"),
+		Token:  q.Get("oauth_token"),
+		Secret: q.Get("oauth_token_secret"),
 	}
 
 	return tok, nil

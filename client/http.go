@@ -6,7 +6,7 @@ import (
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/whosonfirst/go-ioutil"
 	"io"
-	_ "log"
+	"log"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -58,6 +58,17 @@ func NewHTTPClient(ctx context.Context, uri string) (Client, error) {
 		http_client:     http_client,
 		consumer_key:    key,
 		consumer_secret: secret,
+	}
+
+	oauth_token := q.Get("oauth_token")
+	oauth_token_secret := q.Get("oauth_token_secret")
+
+	if oauth_token != "" {
+		cl.oauth_token = oauth_token
+	}
+
+	if oauth_token_secret != "" {
+		cl.oauth_token_secret = oauth_token_secret
 	}
 
 	return cl, nil
@@ -133,7 +144,50 @@ func (cl *HTTPClient) AuthorizationURL(ctx context.Context, req *auth.RequestTok
 
 func (cl *HTTPClient) GetAccessToken(ctx context.Context, auth_token *auth.AuthorizationToken) (*auth.AccessToken, error) {
 
-	return nil, fmt.Errorf("Not implemented")
+	endpoint, err := url.Parse(API)
+
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint.Path = filepath.Join(endpoint.Path, AUTH_TOKEN)
+
+	http_method := "GET"
+
+	args := &url.Values{}
+
+	args.Set("oauth_token", auth_token.Token)
+	args.Set("oauth_verifier", auth_token.Verifier)
+
+	args, err = cl.signArgs(http_method, endpoint, args)
+
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint.RawQuery = args.Encode()
+
+	req, err := http.NewRequest(http_method, endpoint.String(), nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	fh, err := cl.call(ctx, req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer fh.Close()
+
+	rsp_body, err := io.ReadAll(fh)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return auth.UnmarshalAccessToken(string(rsp_body))
 }
 
 func (cl *HTTPClient) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadSeekCloser, error) {
@@ -155,6 +209,8 @@ func (cl *HTTPClient) ExecuteMethod(ctx context.Context, args *url.Values) (io.R
 	}
 
 	endpoint.RawQuery = args.Encode()
+
+	log.Println(endpoint.String())
 
 	req, err := http.NewRequest(http_method, endpoint.String(), nil)
 

@@ -29,29 +29,10 @@ func main() {
 		log.Fatalf("Failed to create new server, %v", err)
 	}
 
-	cl, err := client.NewHTTPClient(ctx, *client_uri)
-
-	if err != nil {
-		log.Fatalf("Failed to create client, %v", err)
-	}
-
-	log.Println("SERVER", svr.Address())
-	req_token, err := cl.GetRequestToken(ctx, svr.Address())
-
-	if err != nil {
-		log.Fatalf("Failed to create request token, %v", err)
-	}
-
-	auth_url, err := cl.AuthorizationURL(ctx, req_token, *perms)
-
-	if err != nil {
-		log.Fatalf("Failed to create authorization URL, %v", err)
-	}
-
 	token_ch := make(chan *auth.AuthorizationToken)
 	err_ch := make(chan error)
 
-	auth_handler, err := http.NewOAuth1AuthorizeTokenHandler(token_ch, err_ch)
+	auth_handler, err := http.NewAuthorizationTokenHandler(token_ch, err_ch)
 
 	if err != nil {
 		log.Fatalf("Failed to create request handler, %v", err)
@@ -69,6 +50,24 @@ func main() {
 			panic(err)
 		}
 	}()
+
+	cl, err := client.NewHTTPClient(ctx, *client_uri)
+
+	if err != nil {
+		log.Fatalf("Failed to create client, %v", err)
+	}
+
+	req_token, err := cl.GetRequestToken(ctx, svr.Address())
+
+	if err != nil {
+		log.Fatalf("Failed to create request token, %v", err)
+	}
+
+	auth_url, err := cl.AuthorizationURL(ctx, req_token, *perms)
+
+	if err != nil {
+		log.Fatalf("Failed to create authorization URL, %v", err)
+	}
 
 	log.Printf("Authorize this application %s\n", auth_url)
 
