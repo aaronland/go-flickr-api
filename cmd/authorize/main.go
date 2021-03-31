@@ -4,36 +4,30 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/http"
+	"github.com/aaronland/go-http-server"
 	"log"
 	gohttp "net/http"
-	"net/url"
 	"os"
 )
 
 func main() {
 
+	server_uri := flag.String("server-uri", "http://localhost:8080", "")
 	client_uri := flag.String("client-uri", "", "...")
+	perms := flag.String("perms", "read", "...")
 
 	flag.Parse()
 
-	host := "localhost"
-	port := 8080
+	ctx := context.Background()
 
-	addr := fmt.Sprintf("%s:%d", host, port)
-
-	cb_url, err := url.Parse(addr)
+	svr, err := server.NewServer(ctx, *server_uri)
 
 	if err != nil {
-		log.Fatalf("Failed to parse '%s', %v", addr, err)
+		log.Fatalf("Failed to create new server, %v", err)
 	}
-
-	cb_url.Scheme = "http"
-
-	ctx := context.Background()
 
 	cl, err := client.NewHTTPClient(ctx, *client_uri)
 
@@ -41,13 +35,14 @@ func main() {
 		log.Fatalf("Failed to create client, %v", err)
 	}
 
-	req_token, err := cl.GetRequestToken(ctx, cb_url)
+	log.Println("SERVER", svr.Address())
+	req_token, err := cl.GetRequestToken(ctx, svr.Address())
 
 	if err != nil {
 		log.Fatalf("Failed to create request token, %v", err)
 	}
 
-	auth_url, err := cl.AuthorizationURL(ctx, req_token)
+	auth_url, err := cl.AuthorizationURL(ctx, req_token, *perms)
 
 	if err != nil {
 		log.Fatalf("Failed to create authorization URL, %v", err)
@@ -67,7 +62,8 @@ func main() {
 
 	go func() {
 
-		err := gohttp.ListenAndServe(addr, mux)
+		log.Printf("Listening for requests on %s\n", svr.Address())
+		err := svr.ListenAndServe(ctx, mux)
 
 		if err != nil {
 			panic(err)

@@ -8,8 +8,8 @@ import (
 )
 
 type Client interface {
-	GetRequestToken(context.Context, *url.URL) (*auth.RequestToken, error)
-	AuthorizationURL(context.Context, *auth.RequestToken) (*url.URL, error)
+	GetRequestToken(context.Context, string) (*auth.RequestToken, error)
+	AuthorizationURL(context.Context, *auth.RequestToken, string) (*url.URL, error)
 	GetAccessToken(context.Context, *auth.AuthorizationToken) (*auth.AccessToken, error)
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
 }

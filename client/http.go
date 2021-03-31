@@ -63,7 +63,7 @@ func NewHTTPClient(ctx context.Context, uri string) (Client, error) {
 	return cl, nil
 }
 
-func (cl *HTTPClient) GetRequestToken(ctx context.Context, cb_url *url.URL) (*auth.RequestToken, error) {
+func (cl *HTTPClient) GetRequestToken(ctx context.Context, cb_url string) (*auth.RequestToken, error) {
 
 	endpoint, err := url.Parse(API)
 
@@ -76,7 +76,7 @@ func (cl *HTTPClient) GetRequestToken(ctx context.Context, cb_url *url.URL) (*au
 	http_method := "GET"
 
 	args := &url.Values{}
-	args.Set("oauth_callback", cb_url.String())
+	args.Set("oauth_callback", cb_url)
 
 	args, err = cl.signArgs(http_method, endpoint, args)
 
@@ -109,10 +109,14 @@ func (cl *HTTPClient) GetRequestToken(ctx context.Context, cb_url *url.URL) (*au
 	return auth.UnmarshalRequestToken(string(rsp_body))
 }
 
-func (cl *HTTPClient) AuthorizationURL(ctx context.Context, req *auth.RequestToken) (*url.URL, error) {
+func (cl *HTTPClient) AuthorizationURL(ctx context.Context, req *auth.RequestToken, perms string) (*url.URL, error) {
 
 	q := url.Values{}
 	q.Set("oauth_token", req.Token)
+
+	if perms != "" {
+		q.Set("perms", perms)
+	}
 
 	u, err := url.Parse(API)
 
@@ -120,7 +124,8 @@ func (cl *HTTPClient) AuthorizationURL(ctx context.Context, req *auth.RequestTok
 		return nil, err
 	}
 
-	u.Path = AUTH_AUTHORIZE
+	u.Path = filepath.Join(u.Path, AUTH_AUTHORIZE)
+
 	u.RawQuery = q.Encode()
 
 	return u, nil

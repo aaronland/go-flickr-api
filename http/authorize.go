@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/aaronland/go-flickr-api/auth"
-	"io"
+	"github.com/aaronland/go-http-sanitize"
 	gohttp "net/http"
 )
 
@@ -10,22 +10,23 @@ func NewOAuth1AuthorizeTokenHandler(token_ch chan *auth.AuthorizationToken, err_
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
 
-		defer req.Body.Close()
-
-		body, err := io.ReadAll(req.Body)
+		token, err := sanitize.GetString(req, "oauth_token")
 
 		if err != nil {
-			err_ch <- err
-			gohttp.Error(rsp, err.Error(), gohttp.StatusBadRequest)
+			gohttp.Error(rsp, "Missing ?oauth_token parameter", gohttp.StatusBadRequest)
 			return
 		}
 
-		auth_token, err := auth.UnmarshalAuthorizationToken(string(body))
+		verifier, err := sanitize.GetString(req, "oauth_verifier")
 
 		if err != nil {
-			err_ch <- err
-			gohttp.Error(rsp, err.Error(), gohttp.StatusBadRequest)
+			gohttp.Error(rsp, "Missing ?oauth_verifier parameter", gohttp.StatusBadRequest)
 			return
+		}
+
+		auth_token := &auth.AuthorizationToken{
+			Token:    token,
+			Verifier: verifier,
 		}
 
 		token_ch <- auth_token
