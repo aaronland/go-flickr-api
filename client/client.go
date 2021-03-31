@@ -12,4 +12,5 @@ type Client interface {
 	AuthorizationURL(context.Context, *auth.RequestToken, string) (*url.URL, error)
 	GetAccessToken(context.Context, *auth.AuthorizationToken) (*auth.AccessToken, error)
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
+	SetOAuthCredentials(*auth.AccessToken)
 }

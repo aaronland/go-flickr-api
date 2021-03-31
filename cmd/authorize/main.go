@@ -8,8 +8,10 @@ import (
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/http"
 	"github.com/aaronland/go-http-server"
+	"io"
 	"log"
 	gohttp "net/http"
+	"net/url"
 	"os"
 )
 
@@ -95,6 +97,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to get access token, %v", err)
 	}
+
+	cl.SetOAuthCredentials(access_token)
+
+	args := &url.Values{}
+	args.Set("method", "flickr.test.login")
+
+	rsp, err := cl.ExecuteMethod(ctx, args)
+
+	if err != nil {
+		log.Fatalf("Failed to test login, %v", err)
+	}
+
+	io.Copy(os.Stdout, rsp)
 
 	enc := json.NewEncoder(os.Stdout)
 	err = enc.Encode(access_token)

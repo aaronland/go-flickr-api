@@ -74,6 +74,11 @@ func NewHTTPClient(ctx context.Context, uri string) (Client, error) {
 	return cl, nil
 }
 
+func (cl *HTTPClient) SetOAuthCredentials(access_token *auth.AccessToken) {
+	cl.oauth_token = access_token.Token
+	cl.oauth_token_secret = access_token.Secret
+}
+
 func (cl *HTTPClient) GetRequestToken(ctx context.Context, cb_url string) (*auth.RequestToken, error) {
 
 	endpoint, err := url.Parse(API)
@@ -265,8 +270,6 @@ func (cl *HTTPClient) signArgs(http_method string, endpoint *url.URL, args *url.
 	if cl.oauth_token != "" {
 		args.Set("oauth_token", cl.oauth_token)
 	}
-
-	// args.Set("api_key", cl.consumer_key)
 
 	sig := cl.getSignature(http_method, endpoint, args, cl.oauth_token_secret)
 	args.Set("oauth_signature", sig)
