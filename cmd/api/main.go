@@ -20,6 +20,10 @@ func main() {
 
 	flag.Parse()
 
+	if len(params) == 0 {
+		log.Fatal("Missing one or more -param flags")
+	}
+
 	ctx := context.Background()
 
 	cl, err := client.NewClient(ctx, *client_uri)

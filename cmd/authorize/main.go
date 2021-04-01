@@ -36,7 +36,7 @@ func main() {
 	token_ch := make(chan *auth.AuthorizationToken)
 	err_ch := make(chan error)
 
-	auth_handler, err := http.NewAuthorizationTokenHandler(token_ch, err_ch)
+	auth_handler, err := http.NewAuthorizationTokenHandlerWithChannels(token_ch, err_ch)
 
 	if err != nil {
 		log.Fatalf("Failed to create request handler, %v", err)

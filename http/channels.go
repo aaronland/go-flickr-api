@@ -6,7 +6,7 @@ import (
 	gohttp "net/http"
 )
 
-func NewAuthorizationTokenHandler(token_ch chan *auth.AuthorizationToken, err_ch chan error) (gohttp.Handler, error) {
+func NewAuthorizationTokenHandlerWithChannels(token_ch chan *auth.AuthorizationToken, err_ch chan error) (gohttp.Handler, error) {
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
 
@@ -30,6 +30,8 @@ func NewAuthorizationTokenHandler(token_ch chan *auth.AuthorizationToken, err_ch
 		}
 
 		token_ch <- auth_token
+
+		rsp.Write([]byte(`Authorization request successful.`))
 		return
 	}
 
