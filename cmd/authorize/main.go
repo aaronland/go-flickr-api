@@ -33,7 +33,7 @@ func main() {
 		log.Fatalf("Failed to create new server, %v", err)
 	}
 
-	token_ch := make(chan *auth.AuthorizationToken)
+	token_ch := make(chan auth.AuthorizationToken)
 	err_ch := make(chan error)
 
 	auth_handler, err := oauth1.NewAuthorizationTokenHandlerWithChannels(token_ch, err_ch)
@@ -67,7 +67,7 @@ func main() {
 		log.Fatalf("Failed to create request token, %v", err)
 	}
 
-	auth_url, err := cl.AuthorizationURL(ctx, req_token, *perms)
+	auth_url, err := cl.GetAuthorizationURL(ctx, req_token, *perms)
 
 	if err != nil {
 		log.Fatalf("Failed to create authorization URL, %v", err)
@@ -77,7 +77,7 @@ func main() {
 
 	// Add a timeout Timer here
 
-	var auth_token *auth.AuthorizationToken
+	var auth_token auth.AuthorizationToken
 
 	for {
 		select {
@@ -100,7 +100,11 @@ func main() {
 		log.Fatalf("Failed to get access token, %v", err)
 	}
 
-	cl.SetOAuthCredentials(access_token)
+	cl, err = cl.WithAccessToken(ctx, access_token)
+
+	if err != nil {
+		log.Fatalf("Failed to assign client with access token, %v", err)
+	}
 
 	args := &url.Values{}
 	args.Set("method", "flickr.test.login")

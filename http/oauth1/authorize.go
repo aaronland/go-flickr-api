@@ -30,14 +30,14 @@ func NewAuthorizationTokenHandler(cl client.Client) (gohttp.Handler, error) {
 			return
 		}
 
-		auth_token := &auth.AuthorizationToken{
-			Token:    token,
-			Verifier: verifier,
+		auth_token := &auth.OAuth1AuthorizationToken{
+			OAuthToken:    token,
+			OAuthVerifier: verifier,
 		}
 
 		// RETRIEVE req_token FROM CACHE, key off auth_token.Token
-		
-		var req_token *auth.RequestToken // FIX ME...
+
+		var req_token auth.RequestToken // FIX ME...
 		access_token, err := cl.GetAccessToken(ctx, req_token, auth_token)
 
 		if err != nil {
@@ -45,7 +45,12 @@ func NewAuthorizationTokenHandler(cl client.Client) (gohttp.Handler, error) {
 			return
 		}
 
-		cl.SetOAuthCredentials(access_token)
+		cl, err = cl.WithAccessToken(ctx, access_token)
+
+		if err != nil {
+			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			return
+		}
 
 		args := &url.Values{}
 		args.Set("method", "flickr.test.login")
@@ -58,7 +63,7 @@ func NewAuthorizationTokenHandler(cl client.Client) (gohttp.Handler, error) {
 		}
 
 		// STORE auth_token... WHERE? AND THEN WHAT?
-		
+
 		enc := json.NewEncoder(io.Discard)
 		err = enc.Encode(access_token)
 

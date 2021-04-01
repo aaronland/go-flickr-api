@@ -15,16 +15,18 @@ const API string = "https://www.flickr.com/services"
 const REST string = "rest"
 
 type Client interface {
-	GetRequestToken(context.Context, string) (*auth.RequestToken, error)
-	AuthorizationURL(context.Context, *auth.RequestToken, string) (*url.URL, error)
-	GetAccessToken(context.Context, *auth.RequestToken, *auth.AuthorizationToken) (*auth.AccessToken, error)
+	GetRequestToken(context.Context, string) (auth.RequestToken, error)
+	GetAuthorizationURL(context.Context, auth.RequestToken, string) (string, error)
+	GetAccessToken(context.Context, auth.RequestToken, auth.AuthorizationToken) (auth.AccessToken, error)
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
-	SetOAuthCredentials(*auth.AccessToken)
-	// WithCredential(context.Context, *auth.AccessToken) (Client, error)
-	// Upload(context.Context, io.Reader) 
+	ExecuteMethodPaginated(context.Context, *url.Values, ExecuteMethodPaginatedCallback) error
+	WithAccessToken(context.Context, auth.AccessToken) (Client, error)
+	// Upload(context.Context, io.Reader)
 }
 
-type ClientInitializeFunc func(ctx context.Context, uri string) (Client, error)
+type ExecuteMethodPaginatedCallback func(context.Context, io.ReadSeekCloser, error) error
+
+type ClientInitializeFunc func(context.Context, string) (Client, error)
 
 var clients roster.Roster
 

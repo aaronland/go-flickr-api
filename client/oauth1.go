@@ -80,12 +80,20 @@ func NewOAuth1Client(ctx context.Context, uri string) (Client, error) {
 	return cl, nil
 }
 
-func (cl *OAuth1Client) SetOAuthCredentials(access_token *auth.AccessToken) {
-	cl.oauth_token = access_token.Token
-	cl.oauth_token_secret = access_token.Secret
+func (cl *OAuth1Client) WithAccessToken(ctx context.Context, access_token auth.AccessToken) (Client, error) {
+
+	new_cl := &OAuth1Client{
+		http_client:        cl.http_client,
+		consumer_key:       cl.consumer_key,
+		consumer_secret:    cl.consumer_secret,
+		oauth_token:        access_token.Token(),
+		oauth_token_secret: access_token.Secret(),
+	}
+
+	return new_cl, nil
 }
 
-func (cl *OAuth1Client) GetRequestToken(ctx context.Context, cb_url string) (*auth.RequestToken, error) {
+func (cl *OAuth1Client) GetRequestToken(ctx context.Context, cb_url string) (auth.RequestToken, error) {
 
 	endpoint, err := url.Parse(API)
 
@@ -128,13 +136,13 @@ func (cl *OAuth1Client) GetRequestToken(ctx context.Context, cb_url string) (*au
 		return nil, err
 	}
 
-	return auth.UnmarshalRequestToken(string(rsp_body))
+	return auth.UnmarshalOAuth1RequestToken(string(rsp_body))
 }
 
-func (cl *OAuth1Client) AuthorizationURL(ctx context.Context, req *auth.RequestToken, perms string) (*url.URL, error) {
+func (cl *OAuth1Client) GetAuthorizationURL(ctx context.Context, req auth.RequestToken, perms string) (string, error) {
 
 	q := url.Values{}
-	q.Set("oauth_token", req.Token)
+	q.Set("oauth_token", req.Token())
 
 	if perms != "" {
 		q.Set("perms", perms)
@@ -143,16 +151,16 @@ func (cl *OAuth1Client) AuthorizationURL(ctx context.Context, req *auth.RequestT
 	u, err := url.Parse(API)
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	u.Path = filepath.Join(u.Path, OAUTH1_AUTHORIZE)
 	u.RawQuery = q.Encode()
 
-	return u, nil
+	return u.String(), nil
 }
 
-func (cl *OAuth1Client) GetAccessToken(ctx context.Context, req_token *auth.RequestToken, auth_token *auth.AuthorizationToken) (*auth.AccessToken, error) {
+func (cl *OAuth1Client) GetAccessToken(ctx context.Context, req_token auth.RequestToken, auth_token auth.AuthorizationToken) (auth.AccessToken, error) {
 
 	endpoint, err := url.Parse(API)
 
@@ -170,10 +178,10 @@ func (cl *OAuth1Client) GetAccessToken(ctx context.Context, req_token *auth.Requ
 	// response but the secret is coming from the request response. It took
 	// me a long time to figure that out... (20210331/thisisaaronland)
 
-	args.Set("oauth_token", auth_token.Token)
-	args.Set("oauth_verifier", auth_token.Verifier)
+	args.Set("oauth_token", auth_token.Token())
+	args.Set("oauth_verifier", auth_token.Verifier())
 
-	args, err = cl.signArgs(http_method, endpoint, args, req_token.Secret)
+	args, err = cl.signArgs(http_method, endpoint, args, req_token.Secret())
 
 	if err != nil {
 		return nil, err
@@ -201,7 +209,7 @@ func (cl *OAuth1Client) GetAccessToken(ctx context.Context, req_token *auth.Requ
 		return nil, err
 	}
 
-	return auth.UnmarshalAccessToken(string(rsp_body))
+	return auth.UnmarshalOAuth1AccessToken(string(rsp_body))
 }
 
 func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadSeekCloser, error) {
@@ -238,6 +246,10 @@ func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io
 	}
 
 	return cl.call(ctx, req)
+}
+
+func (cl *OAuth1Client) ExecuteMethodPaginated(ctx context.Context, args *url.Values, cb ExecuteMethodPaginatedCallback) error {
+	return fmt.Errorf("Not implemented")
 }
 
 func (cl *OAuth1Client) call(ctx context.Context, req *http.Request) (io.ReadSeekCloser, error) {
@@ -283,7 +295,7 @@ func (cl *OAuth1Client) signArgs(http_method string, endpoint *url.URL, args *ur
 func (cl *OAuth1Client) getSignature(http_method string, endpoint *url.URL, args *url.Values, token_secret string) string {
 
 	key := fmt.Sprintf("%s&%s", url.QueryEscape(cl.consumer_secret), url.QueryEscape(token_secret))
-	base_string := auth.GenerateSigningBaseString(http_method, endpoint, args)
+	base_string := auth.GenerateOAuth1SigningBaseString(http_method, endpoint, args)
 
-	return auth.GenerateSignature(key, base_string)
+	return auth.GenerateOAuth1Signature(key, base_string)
 }

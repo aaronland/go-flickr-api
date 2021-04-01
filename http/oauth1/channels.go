@@ -6,7 +6,7 @@ import (
 	gohttp "net/http"
 )
 
-func NewAuthorizationTokenHandlerWithChannels(token_ch chan *auth.AuthorizationToken, err_ch chan error) (gohttp.Handler, error) {
+func NewAuthorizationTokenHandlerWithChannels(token_ch chan auth.AuthorizationToken, err_ch chan error) (gohttp.Handler, error) {
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
 
@@ -24,9 +24,9 @@ func NewAuthorizationTokenHandlerWithChannels(token_ch chan *auth.AuthorizationT
 			return
 		}
 
-		auth_token := &auth.AuthorizationToken{
-			Token:    token,
-			Verifier: verifier,
+		auth_token := &auth.OAuth1AuthorizationToken{
+			OAuthToken:    token,
+			OAuthVerifier: verifier,
 		}
 
 		token_ch <- auth_token

@@ -51,14 +51,50 @@ This package does not define any Go types or structs mapping to individual API r
 
 ## Interfaces
 
+### auth.RequestToken
+
+```
+type RequestToken interface {
+	Token() string
+	Secret() string
+}
+```
+
+### auth.AuthorizationToken
+
+```
+type AuthorizationToken interface {
+	Token() string
+	Verifier() string
+}
+```
+
+### auth.AccessToken
+
+```
+type AccessToken interface {
+	Token() string
+	Secret() string
+}
+```
+
+### client.Client
+
 ```
 type Client interface {
-	GetRequestToken(context.Context, string) (*auth.RequestToken, error)
-	AuthorizationURL(context.Context, *auth.RequestToken, string) (*url.URL, error)
-	GetAccessToken(context.Context, *auth.RequestToken, *auth.AuthorizationToken) (*auth.AccessToken, error)
+	GetRequestToken(context.Context, string) (auth.RequestToken, error)
+	GetAuthorizationURL(context.Context, auth.RequestToken, string) (string, error)
+	GetAccessToken(context.Context, auth.RequestToken, auth.AuthorizationToken) (auth.AccessToken, error)
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
-	SetOAuthCredentials(*auth.AccessToken)
+	ExecuteMethodPaginated(context.Context, *url.Values, ExecuteMethodPaginatedCallback) error	
+	WithAccessToken(context.Context, auth.AccessToken) (Client, error)
 }
+```
+
+### client.ExecuteMethodPaginatedCallback
+
+```
+type ExecuteMethodPaginatedCallback func(context.Context, io.ReadSeekCloser, error) error
 ```
 
 _Important: This interface may still change._
