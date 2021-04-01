@@ -4,7 +4,7 @@ Go package for working with the Flickr API
 
 ## Important
 
-Work in progress. Documentation to follow.
+Work in progress. Uploads not supported yet. There may still be bugs. Complete documentation to follow.
 
 ## Example
 
