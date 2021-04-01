@@ -25,6 +25,9 @@ func main() {
 
 	ctx := context.Background()
 
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	svr, err := server.NewServer(ctx, *server_uri)
 
 	if err != nil {

@@ -17,7 +17,7 @@ import (
 const API string = "https://www.flickr.com/services"
 const AUTH_REQUEST = "oauth/request_token"
 const AUTH_AUTHORIZE = "oauth/authorize"
-const AUTH_TOKEN = "oauth/request_token"
+const AUTH_TOKEN = "oauth/access_token"
 
 const REST string = "rest"
 
@@ -214,8 +214,6 @@ func (cl *HTTPClient) ExecuteMethod(ctx context.Context, args *url.Values) (io.R
 	}
 
 	endpoint.RawQuery = args.Encode()
-
-	log.Println(endpoint.String())
 
 	req, err := http.NewRequest(http_method, endpoint.String(), nil)
 

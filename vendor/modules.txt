@@ -1,7 +1,7 @@
 # github.com/aaronland/go-http-sanitize v0.0.5
 ## explicit
 github.com/aaronland/go-http-sanitize
-# github.com/aaronland/go-http-server v0.0.5
+# github.com/aaronland/go-http-server v0.0.6
 ## explicit
 github.com/aaronland/go-http-server
 # github.com/aaronland/go-roster v0.0.2
