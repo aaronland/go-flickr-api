@@ -7,11 +7,18 @@ import (
 	"github.com/aaronland/go-http-sanitize"
 	"gocloud.dev/docstore"
 	"io"
+	"log"
 	gohttp "net/http"
 	"net/url"
+	_ "os"
 )
 
-func NewAuthorizationTokenHandler(cl client.Client, col docstore.Collection) (gohttp.Handler, error) {
+type AuthorizationTokenHandlerOptions struct {
+	Client     client.Client
+	Collection *docstore.Collection
+}
+
+func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohttp.Handler, error) {
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
 
@@ -31,16 +38,25 @@ func NewAuthorizationTokenHandler(cl client.Client, col docstore.Collection) (go
 			return
 		}
 
-		cache := RequestTokenCache{
+		cache := &RequestTokenCache{
 			Token: token,
 		}
 
-		err = col.Get(ctx, cache)
+		err = opts.Collection.Get(ctx, cache)
 
 		if err != nil {
 			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
 			return
 		}
+
+		defer func() {
+
+			err := opts.Collection.Delete(ctx, cache)
+
+			if err != nil {
+				log.Printf("Failed to delete cache item for %s, err\n", cache.Token, err)
+			}
+		}()
 
 		req_token := &auth.OAuth1RequestToken{
 			OAuthToken:       cache.Token,
@@ -52,14 +68,14 @@ func NewAuthorizationTokenHandler(cl client.Client, col docstore.Collection) (go
 			OAuthVerifier: verifier,
 		}
 
-		access_token, err := cl.GetAccessToken(ctx, req_token, auth_token)
+		access_token, err := opts.Client.GetAccessToken(ctx, req_token, auth_token)
 
 		if err != nil {
 			gohttp.Error(rsp, "Missing ?oauth_verifier parameter", gohttp.StatusBadRequest)
 			return
 		}
 
-		cl, err = cl.WithAccessToken(ctx, access_token)
+		cl, err := opts.Client.WithAccessToken(ctx, access_token)
 
 		if err != nil {
 			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)

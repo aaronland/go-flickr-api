@@ -10,6 +10,7 @@ import (
 	_ "gocloud.dev/docstore/memdocstore"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 func main() {
@@ -45,14 +46,41 @@ func main() {
 		log.Fatalf("Failed to create new server, %v", err)
 	}
 
-	request_handler, err := oauth1.NewRequestTokenHandler(cl, col, *perms)
+	req_uri := "/"
+	auth_uri := "/auth"
+
+	cb_url, _ := url.Parse(svr.Address())
+	cb_url.Path = auth_uri
+
+	auth_callback := cb_url.String()
+
+	request_opts := &oauth1.RequestTokenHandlerOptions{
+		Client:       cl,
+		Collection:   col,
+		Permissions:  *perms,
+		AuthCallback: auth_callback,
+	}
+
+	request_handler, err := oauth1.NewRequestTokenHandler(request_opts)
 
 	if err != nil {
 		log.Fatalf("Failed to create request handler, %v", err)
 	}
 
+	auth_opts := &oauth1.AuthorizationTokenHandlerOptions{
+		Client:     cl,
+		Collection: col,
+	}
+
+	auth_handler, err := oauth1.NewAuthorizationTokenHandler(auth_opts)
+
+	if err != nil {
+		log.Fatalf("Failed to create authorization handler, %v", err)
+	}
+
 	mux := http.NewServeMux()
-	mux.Handle("/", request_handler)
+	mux.Handle(req_uri, request_handler)
+	mux.Handle(auth_uri, auth_handler)
 
 	log.Printf("Listening for requests on %s\n", svr.Address())
 	err = svr.ListenAndServe(ctx, mux)

@@ -12,7 +12,7 @@ import (
 )
 
 type OAuth1RequestToken struct {
-	RequestToken
+	RequestToken     `json:",omitempty"`
 	OAuthToken       string `json:"oath_token"`
 	OAuthTokenSecret string `json:"oauth_token_secret"`
 }
@@ -26,9 +26,9 @@ func (t *OAuth1RequestToken) Secret() string {
 }
 
 type OAuth1AuthorizationToken struct {
-	AuthorizationToken
-	OAuthToken    string `json:"oath_token"`
-	OAuthVerifier string `json:"oath_verifier"`
+	AuthorizationToken `json:",omitempty"`
+	OAuthToken         string `json:"oath_token"`
+	OAuthVerifier      string `json:"oath_verifier"`
 }
 
 func (t *OAuth1AuthorizationToken) Token() string {
@@ -40,7 +40,7 @@ func (t *OAuth1AuthorizationToken) Verifier() string {
 }
 
 type OAuth1AccessToken struct {
-	AccessToken
+	AccessToken      `json:",omitempty"`
 	OAuthToken       string `json:"oauth_token"`
 	OAuthTokenSecret string `json:"oauth_token_secret"`
 }

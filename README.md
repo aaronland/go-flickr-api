@@ -146,3 +146,5 @@ $> ./bin/authorize \
 
 * https://www.flickr.com/services/api/
 * https://www.flickr.com/services/api/auth.oauth.html
+* https://github.com/aaronland/go-http-server
+* https://gocloud.dev/howto/docstore/
