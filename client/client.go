@@ -10,7 +10,7 @@ import (
 type Client interface {
 	GetRequestToken(context.Context, string) (*auth.RequestToken, error)
 	AuthorizationURL(context.Context, *auth.RequestToken, string) (*url.URL, error)
-	GetAccessToken(context.Context, *auth.AuthorizationToken) (*auth.AccessToken, error)
+	GetAccessToken(context.Context, *auth.RequestToken, *auth.AuthorizationToken) (*auth.AccessToken, error)
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
 	SetOAuthCredentials(*auth.AccessToken)
 }

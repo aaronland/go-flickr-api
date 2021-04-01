@@ -6,7 +6,7 @@ import (
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/whosonfirst/go-ioutil"
 	"io"
-	"log"
+	_ "log"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -94,7 +94,7 @@ func (cl *HTTPClient) GetRequestToken(ctx context.Context, cb_url string) (*auth
 	args := &url.Values{}
 	args.Set("oauth_callback", cb_url)
 
-	args, err = cl.signArgs(http_method, endpoint, args)
+	args, err = cl.signArgs(http_method, endpoint, args, "")
 
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (cl *HTTPClient) AuthorizationURL(ctx context.Context, req *auth.RequestTok
 	return u, nil
 }
 
-func (cl *HTTPClient) GetAccessToken(ctx context.Context, auth_token *auth.AuthorizationToken) (*auth.AccessToken, error) {
+func (cl *HTTPClient) GetAccessToken(ctx context.Context, req_token *auth.RequestToken, auth_token *auth.AuthorizationToken) (*auth.AccessToken, error) {
 
 	endpoint, err := url.Parse(API)
 
@@ -164,7 +164,7 @@ func (cl *HTTPClient) GetAccessToken(ctx context.Context, auth_token *auth.Autho
 	args.Set("oauth_token", auth_token.Token)
 	args.Set("oauth_verifier", auth_token.Verifier)
 
-	args, err = cl.signArgs(http_method, endpoint, args)
+	args, err = cl.signArgs(http_method, endpoint, args, req_token.Secret)
 
 	if err != nil {
 		return nil, err
@@ -235,6 +235,7 @@ func (cl *HTTPClient) call(ctx context.Context, req *http.Request) (io.ReadSeekC
 	}
 
 	if rsp.StatusCode != http.StatusOK {
+		rsp.Body.Close()
 		return nil, fmt.Errorf("API call failed with status '%s'", rsp.Status)
 	}
 
@@ -246,10 +247,14 @@ func (cl *HTTPClient) prepareArgs(http_method string, endpoint *url.URL, args *u
 	args.Set("nojsoncallback", "1")
 	args.Set("format", "json")
 
-	return cl.signArgs(http_method, endpoint, args)
+	if cl.oauth_token != "" {
+		args.Set("oauth_token", cl.oauth_token)
+	}
+
+	return cl.signArgs(http_method, endpoint, args, cl.oauth_token_secret)
 }
 
-func (cl *HTTPClient) signArgs(http_method string, endpoint *url.URL, args *url.Values) (*url.Values, error) {
+func (cl *HTTPClient) signArgs(http_method string, endpoint *url.URL, args *url.Values, secret string) (*url.Values, error) {
 
 	now := time.Now()
 	ts := now.Unix()
@@ -265,11 +270,7 @@ func (cl *HTTPClient) signArgs(http_method string, endpoint *url.URL, args *url.
 	args.Set("oauth_timestamp", str_ts)
 	args.Set("oauth_consumer_key", cl.consumer_key)
 
-	if cl.oauth_token != "" {
-		args.Set("oauth_token", cl.oauth_token)
-	}
-
-	sig := cl.getSignature(http_method, endpoint, args, cl.oauth_token_secret)
+	sig := cl.getSignature(http_method, endpoint, args, secret)
 	args.Set("oauth_signature", sig)
 
 	return args, nil
