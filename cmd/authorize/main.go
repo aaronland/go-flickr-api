@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"github.com/aaronland/go-flickr-api/auth"
-	"github.com/aaronland/go-flickr-api/client"
+	"github.com/aaronland/go-flickr-api"
 	"github.com/aaronland/go-flickr-api/http"
 	"github.com/aaronland/go-http-server"
 	"log"
@@ -55,7 +55,7 @@ func main() {
 		}
 	}()
 
-	cl, err := client.NewHTTPClient(ctx, *client_uri)
+	cl, err := api.NewClient(ctx, *client_uri)
 
 	if err != nil {
 		log.Fatalf("Failed to create client, %v", err)

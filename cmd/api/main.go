@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/aaronland/go-flickr-api/client"
+	"github.com/aaronland/go-flickr-api"
 	"github.com/sfomuseum/go-flags/multi"
 	"io"
 	"log"
@@ -22,7 +22,7 @@ func main() {
 
 	ctx := context.Background()
 
-	cl, err := client.NewHTTPClient(ctx, *client_uri)
+	cl, err := api.NewClient(ctx, *client_uri)
 
 	if err != nil {
 		log.Fatalf("Failed to create client, %v", err)

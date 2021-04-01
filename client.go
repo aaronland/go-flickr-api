@@ -1,4 +1,4 @@
-package client
+package api
 
 import (
 	"context"
@@ -14,15 +14,7 @@ import (
 	"time"
 )
 
-const API string = "https://www.flickr.com/services"
-const AUTH_REQUEST = "oauth/request_token"
-const AUTH_AUTHORIZE = "oauth/authorize"
-const AUTH_TOKEN = "oauth/access_token"
-
-const REST string = "rest"
-
-type HTTPClient struct {
-	Client
+type Client struct {
 	http_client        *http.Client
 	api_endpoint       *url.URL
 	consumer_key       string
@@ -31,7 +23,7 @@ type HTTPClient struct {
 	oauth_token_secret string
 }
 
-func NewHTTPClient(ctx context.Context, uri string) (Client, error) {
+func NewClient(ctx context.Context, uri string) (*Client, error) {
 
 	u, err := url.Parse(uri)
 
@@ -54,7 +46,7 @@ func NewHTTPClient(ctx context.Context, uri string) (Client, error) {
 
 	http_client := &http.Client{}
 
-	cl := &HTTPClient{
+	cl := &Client{
 		http_client:     http_client,
 		consumer_key:    key,
 		consumer_secret: secret,
@@ -74,12 +66,12 @@ func NewHTTPClient(ctx context.Context, uri string) (Client, error) {
 	return cl, nil
 }
 
-func (cl *HTTPClient) SetOAuthCredentials(access_token *auth.AccessToken) {
+func (cl *Client) SetOAuthCredentials(access_token *auth.AccessToken) {
 	cl.oauth_token = access_token.Token
 	cl.oauth_token_secret = access_token.Secret
 }
 
-func (cl *HTTPClient) GetRequestToken(ctx context.Context, cb_url string) (*auth.RequestToken, error) {
+func (cl *Client) GetRequestToken(ctx context.Context, cb_url string) (*auth.RequestToken, error) {
 
 	endpoint, err := url.Parse(API)
 
@@ -125,7 +117,7 @@ func (cl *HTTPClient) GetRequestToken(ctx context.Context, cb_url string) (*auth
 	return auth.UnmarshalRequestToken(string(rsp_body))
 }
 
-func (cl *HTTPClient) AuthorizationURL(ctx context.Context, req *auth.RequestToken, perms string) (*url.URL, error) {
+func (cl *Client) AuthorizationURL(ctx context.Context, req *auth.RequestToken, perms string) (*url.URL, error) {
 
 	q := url.Values{}
 	q.Set("oauth_token", req.Token)
@@ -147,7 +139,7 @@ func (cl *HTTPClient) AuthorizationURL(ctx context.Context, req *auth.RequestTok
 	return u, nil
 }
 
-func (cl *HTTPClient) GetAccessToken(ctx context.Context, req_token *auth.RequestToken, auth_token *auth.AuthorizationToken) (*auth.AccessToken, error) {
+func (cl *Client) GetAccessToken(ctx context.Context, req_token *auth.RequestToken, auth_token *auth.AuthorizationToken) (*auth.AccessToken, error) {
 
 	endpoint, err := url.Parse(API)
 
@@ -195,7 +187,7 @@ func (cl *HTTPClient) GetAccessToken(ctx context.Context, req_token *auth.Reques
 	return auth.UnmarshalAccessToken(string(rsp_body))
 }
 
-func (cl *HTTPClient) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadSeekCloser, error) {
+func (cl *Client) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadSeekCloser, error) {
 
 	endpoint, err := url.Parse(API)
 
@@ -224,7 +216,7 @@ func (cl *HTTPClient) ExecuteMethod(ctx context.Context, args *url.Values) (io.R
 	return cl.call(ctx, req)
 }
 
-func (cl *HTTPClient) call(ctx context.Context, req *http.Request) (io.ReadSeekCloser, error) {
+func (cl *Client) call(ctx context.Context, req *http.Request) (io.ReadSeekCloser, error) {
 
 	req = req.WithContext(ctx)
 
@@ -242,7 +234,7 @@ func (cl *HTTPClient) call(ctx context.Context, req *http.Request) (io.ReadSeekC
 	return ioutil.NewReadSeekCloser(rsp.Body)
 }
 
-func (cl *HTTPClient) prepareArgs(http_method string, endpoint *url.URL, args *url.Values) (*url.Values, error) {
+func (cl *Client) prepareArgs(http_method string, endpoint *url.URL, args *url.Values) (*url.Values, error) {
 
 	args.Set("nojsoncallback", "1")
 	args.Set("format", "json")
@@ -254,7 +246,7 @@ func (cl *HTTPClient) prepareArgs(http_method string, endpoint *url.URL, args *u
 	return cl.signArgs(http_method, endpoint, args, cl.oauth_token_secret)
 }
 
-func (cl *HTTPClient) signArgs(http_method string, endpoint *url.URL, args *url.Values, secret string) (*url.Values, error) {
+func (cl *Client) signArgs(http_method string, endpoint *url.URL, args *url.Values, secret string) (*url.Values, error) {
 
 	now := time.Now()
 	ts := now.Unix()
@@ -276,7 +268,7 @@ func (cl *HTTPClient) signArgs(http_method string, endpoint *url.URL, args *url.
 	return args, nil
 }
 
-func (cl *HTTPClient) getSignature(http_method string, endpoint *url.URL, args *url.Values, token_secret string) string {
+func (cl *Client) getSignature(http_method string, endpoint *url.URL, args *url.Values, token_secret string) string {
 
 	key := fmt.Sprintf("%s&%s", url.QueryEscape(cl.consumer_secret), url.QueryEscape(token_secret))
 	base_string := auth.GenerateSigningBaseString(http_method, endpoint, args)
