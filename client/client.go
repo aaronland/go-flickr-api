@@ -3,12 +3,11 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/aaronland/go-flickr-api"
 	"github.com/aaronland/go-flickr-api/auth"
-	"github.com/aaronland/go-roster"
 	"io"
 	"net/url"
-	"sort"
-	"strings"
+	"strconv"
 )
 
 const API string = "https://www.flickr.com/services"
@@ -19,80 +18,65 @@ type Client interface {
 	GetAuthorizationURL(context.Context, auth.RequestToken, string) (string, error)
 	GetAccessToken(context.Context, auth.RequestToken, auth.AuthorizationToken) (auth.AccessToken, error)
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
-	ExecuteMethodPaginated(context.Context, *url.Values, ExecuteMethodPaginatedCallback) error
 	WithAccessToken(context.Context, auth.AccessToken) (Client, error)
 	// Upload(context.Context, io.Reader)
 }
 
 type ExecuteMethodPaginatedCallback func(context.Context, io.ReadSeekCloser, error) error
 
-type ClientInitializeFunc func(context.Context, string) (Client, error)
+func ExecuteMethodPaginated(ctx context.Context, cl Client, args *url.Values, cb ExecuteMethodPaginatedCallback) error {
 
-var clients roster.Roster
+	page := 1
+	pages := -1
 
-func ensureClientRoster() error {
+	if args.Get("page") == "" {
+		args.Set("page", strconv.Itoa(page))
+	} else {
 
-	if clients == nil {
+		p, err := strconv.Atoi(args.Get("page"))
 
-		r, err := roster.NewDefaultRoster()
+		if err != nil {
+			return fmt.Errorf("Invalid page number '%s', %v", args.Get("page"), err)
+		}
+
+		page = p
+	}
+
+	for {
+
+		fh, err := cl.ExecuteMethod(ctx, args)
+
+		err = cb(ctx, fh, err)
 
 		if err != nil {
 			return err
 		}
 
-		clients = r
+		_, err = fh.Seek(0, 0)
+
+		if err != nil {
+			return fmt.Errorf("Failed to rewind response, %v", err)
+		}
+
+		if pages == -1 {
+
+			pagination, err := api.DerivePagination(ctx, fh)
+
+			if err != nil {
+				return err
+			}
+
+			pages = pagination.Pages
+		}
+
+		page += 1
+
+		if page <= pages {
+			args.Set("page", strconv.Itoa(page))
+		} else {
+			break
+		}
 	}
 
 	return nil
-}
-
-func RegisterClient(ctx context.Context, scheme string, f ClientInitializeFunc) error {
-
-	err := ensureClientRoster()
-
-	if err != nil {
-		return err
-	}
-
-	return clients.Register(ctx, scheme, f)
-}
-
-func Schemes() []string {
-
-	ctx := context.Background()
-	schemes := []string{}
-
-	err := ensureClientRoster()
-
-	if err != nil {
-		return schemes
-	}
-
-	for _, dr := range clients.Drivers(ctx) {
-		scheme := fmt.Sprintf("%s://", strings.ToLower(dr))
-		schemes = append(schemes, scheme)
-	}
-
-	sort.Strings(schemes)
-	return schemes
-}
-
-func NewClient(ctx context.Context, uri string) (Client, error) {
-
-	u, err := url.Parse(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	scheme := u.Scheme
-
-	i, err := clients.Driver(ctx, scheme)
-
-	if err != nil {
-		return nil, err
-	}
-
-	f := i.(ClientInitializeFunc)
-	return f(ctx, uri)
 }

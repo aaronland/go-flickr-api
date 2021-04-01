@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"github.com/aaronland/go-flickr-api"
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/whosonfirst/go-ioutil"
 	"io"
@@ -247,64 +246,6 @@ func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io
 	}
 
 	return cl.call(ctx, req)
-}
-
-func (cl *OAuth1Client) ExecuteMethodPaginated(ctx context.Context, args *url.Values, cb ExecuteMethodPaginatedCallback) error {
-	return fmt.Errorf("Not implemented")
-
-	page := 1
-	pages := -1
-
-	if args.Get("page") == "" {
-		args.Set("page", strconv.Itoa(page))
-	} else {
-
-		p, err := strconv.Atoi(args.Get("page"))
-
-		if err != nil {
-			return fmt.Errorf("Invalid page number '%s', %v", args.Get("page"), err)
-		}
-
-		page = p
-	}
-
-	for {
-
-		fh, err := cl.ExecuteMethod(ctx, args)
-
-		err = cb(ctx, fh, err)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = fh.Seek(0, 0)
-		
-		if err != nil {
-			return fmt.Errorf("Failed to rewind response, %v", err)
-		}
-
-		if pages == -1 {
-
-			pagination, err := api.DerivePagination(ctx, fh)
-
-			if err != nil {
-				return err
-			}
-
-			pages = pagination.Pages
-		}
-
-		page += 1
-
-		if page <= pages {
-			args.Set("page", strconv.Itoa(page))
-		} else {
-			break
-		}
-	}
-
-	return nil
 }
 
 func (cl *OAuth1Client) call(ctx context.Context, req *http.Request) (io.ReadSeekCloser, error) {
