@@ -6,10 +6,10 @@ import (
 	"flag"
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/aaronland/go-flickr-api/client"
-	"github.com/aaronland/go-flickr-api/http"
+	"github.com/aaronland/go-flickr-api/http/oauth1"
 	"github.com/aaronland/go-http-server"
 	"log"
-	gohttp "net/http"
+	"net/http"
 	"net/url"
 	"os"
 )
@@ -36,13 +36,13 @@ func main() {
 	token_ch := make(chan *auth.AuthorizationToken)
 	err_ch := make(chan error)
 
-	auth_handler, err := http.NewAuthorizationTokenHandlerWithChannels(token_ch, err_ch)
+	auth_handler, err := oauth1.NewAuthorizationTokenHandlerWithChannels(token_ch, err_ch)
 
 	if err != nil {
 		log.Fatalf("Failed to create request handler, %v", err)
 	}
 
-	mux := gohttp.NewServeMux()
+	mux := http.NewServeMux()
 	mux.Handle("/", auth_handler)
 
 	go func() {

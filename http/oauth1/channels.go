@@ -1,4 +1,4 @@
-package http
+package oauth1
 
 import (
 	"github.com/aaronland/go-flickr-api/auth"

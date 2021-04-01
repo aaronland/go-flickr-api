@@ -20,13 +20,15 @@ type Client interface {
 	GetAccessToken(context.Context, *auth.RequestToken, *auth.AuthorizationToken) (*auth.AccessToken, error)
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
 	SetOAuthCredentials(*auth.AccessToken)
+	// WithCredential(context.Context, *auth.AccessToken) (Client, error)
+	// Upload(context.Context, io.Reader) 
 }
 
 type ClientInitializeFunc func(ctx context.Context, uri string) (Client, error)
 
 var clients roster.Roster
 
-func ensureSpatialRoster() error {
+func ensureClientRoster() error {
 
 	if clients == nil {
 
@@ -44,7 +46,7 @@ func ensureSpatialRoster() error {
 
 func RegisterClient(ctx context.Context, scheme string, f ClientInitializeFunc) error {
 
-	err := ensureSpatialRoster()
+	err := ensureClientRoster()
 
 	if err != nil {
 		return err
@@ -58,7 +60,7 @@ func Schemes() []string {
 	ctx := context.Background()
 	schemes := []string{}
 
-	err := ensureSpatialRoster()
+	err := ensureClientRoster()
 
 	if err != nil {
 		return schemes
