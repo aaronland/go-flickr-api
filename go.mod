@@ -8,4 +8,5 @@ require (
 	github.com/aaronland/go-roster v0.0.2
 	github.com/sfomuseum/go-flags v0.8.2
 	github.com/whosonfirst/go-ioutil v0.0.1
+	gocloud.dev v0.22.0
 )

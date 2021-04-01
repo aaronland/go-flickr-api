@@ -5,12 +5,13 @@ import (
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-http-sanitize"
+	"gocloud.dev/docstore"
 	"io"
 	gohttp "net/http"
 	"net/url"
 )
 
-func NewAuthorizationTokenHandler(cl client.Client) (gohttp.Handler, error) {
+func NewAuthorizationTokenHandler(cl client.Client, col docstore.Collection) (gohttp.Handler, error) {
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
 
@@ -30,14 +31,27 @@ func NewAuthorizationTokenHandler(cl client.Client) (gohttp.Handler, error) {
 			return
 		}
 
+		cache := RequestTokenCache{
+			Token: token,
+		}
+
+		err = col.Get(ctx, cache)
+
+		if err != nil {
+			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			return
+		}
+
+		req_token := &auth.OAuth1RequestToken{
+			OAuthToken:       cache.Token,
+			OAuthTokenSecret: cache.Secret,
+		}
+
 		auth_token := &auth.OAuth1AuthorizationToken{
 			OAuthToken:    token,
 			OAuthVerifier: verifier,
 		}
 
-		// RETRIEVE req_token FROM CACHE, key off auth_token.Token
-
-		var req_token auth.RequestToken // FIX ME...
 		access_token, err := cl.GetAccessToken(ctx, req_token, auth_token)
 
 		if err != nil {

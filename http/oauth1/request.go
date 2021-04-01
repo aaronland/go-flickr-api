@@ -2,10 +2,11 @@ package oauth1
 
 import (
 	"github.com/aaronland/go-flickr-api/client"
+	"gocloud.dev/docstore"
 	gohttp "net/http"
 )
 
-func NewRequestTokenHandler(cl client.Client, perms string) (gohttp.Handler, error) {
+func NewRequestTokenHandler(cl client.Client, col *docstore.Collection, perms string) (gohttp.Handler, error) {
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
 
@@ -18,7 +19,19 @@ func NewRequestTokenHandler(cl client.Client, perms string) (gohttp.Handler, err
 			return
 		}
 
-		// STORE req_token.Secret in cache, key off req_token.Token
+		cache, err := NewRequestTokenCache(req_token)
+
+		if err != nil {
+			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			return
+		}
+
+		err = col.Put(ctx, cache)
+
+		if err != nil {
+			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			return
+		}
 
 		auth_url, err := cl.GetAuthorizationURL(ctx, req_token, perms)
 
