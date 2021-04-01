@@ -248,6 +248,22 @@ func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io
 	return cl.call(ctx, req)
 }
 
+func (cl *OAuth1Client) Upload(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {
+	return nil, fmt.Errorf("Not implemented")
+}
+
+func (cl *OAuth1Client) UploadAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {
+	return nil, fmt.Errorf("Not implemented")
+}
+
+func (cl *OAuth1Client) Replace(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {
+	return nil, fmt.Errorf("Not implemented")
+}
+
+func (cl *OAuth1Client) ReplaceAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {
+	return nil, fmt.Errorf("Not implemented")
+}
+
 func (cl *OAuth1Client) call(ctx context.Context, req *http.Request) (io.ReadSeekCloser, error) {
 
 	req = req.WithContext(ctx)

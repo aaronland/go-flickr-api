@@ -14,12 +14,15 @@ const API string = "https://www.flickr.com/services"
 const REST string = "rest"
 
 type Client interface {
+	WithAccessToken(context.Context, auth.AccessToken) (Client, error)
 	GetRequestToken(context.Context, string) (auth.RequestToken, error)
 	GetAuthorizationURL(context.Context, auth.RequestToken, string) (string, error)
 	GetAccessToken(context.Context, auth.RequestToken, auth.AuthorizationToken) (auth.AccessToken, error)
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
-	WithAccessToken(context.Context, auth.AccessToken) (Client, error)
-	// Upload(context.Context, io.Reader)
+	Upload(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
+	UploadAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
+	Replace(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
+	ReplaceAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
 }
 
 type ExecuteMethodPaginatedCallback func(context.Context, io.ReadSeekCloser, error) error
