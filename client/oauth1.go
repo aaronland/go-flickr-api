@@ -1,4 +1,4 @@
-package api
+package client
 
 import (
 	"context"
@@ -14,7 +14,21 @@ import (
 	"time"
 )
 
-type Client struct {
+const OAUTH1_REQUEST = "oauth/request_token"
+const OAUTH1_AUTHORIZE = "oauth/authorize"
+const OAUTH1_TOKEN = "oauth/access_token"
+
+func init() {
+
+	ctx := context.Background()
+	err := RegisterClient(ctx, "oauth1", NewOAuth1Client)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+type OAuth1Client struct {
 	http_client        *http.Client
 	api_endpoint       *url.URL
 	consumer_key       string
@@ -23,7 +37,7 @@ type Client struct {
 	oauth_token_secret string
 }
 
-func NewClient(ctx context.Context, uri string) (*Client, error) {
+func NewOAuth1Client(ctx context.Context, uri string) (Client, error) {
 
 	u, err := url.Parse(uri)
 
@@ -46,7 +60,7 @@ func NewClient(ctx context.Context, uri string) (*Client, error) {
 
 	http_client := &http.Client{}
 
-	cl := &Client{
+	cl := &OAuth1Client{
 		http_client:     http_client,
 		consumer_key:    key,
 		consumer_secret: secret,
@@ -66,12 +80,12 @@ func NewClient(ctx context.Context, uri string) (*Client, error) {
 	return cl, nil
 }
 
-func (cl *Client) SetOAuthCredentials(access_token *auth.AccessToken) {
+func (cl *OAuth1Client) SetOAuthCredentials(access_token *auth.AccessToken) {
 	cl.oauth_token = access_token.Token
 	cl.oauth_token_secret = access_token.Secret
 }
 
-func (cl *Client) GetRequestToken(ctx context.Context, cb_url string) (*auth.RequestToken, error) {
+func (cl *OAuth1Client) GetRequestToken(ctx context.Context, cb_url string) (*auth.RequestToken, error) {
 
 	endpoint, err := url.Parse(API)
 
@@ -79,7 +93,7 @@ func (cl *Client) GetRequestToken(ctx context.Context, cb_url string) (*auth.Req
 		return nil, err
 	}
 
-	endpoint.Path = filepath.Join(endpoint.Path, AUTH_REQUEST)
+	endpoint.Path = filepath.Join(endpoint.Path, OAUTH1_REQUEST)
 
 	http_method := "GET"
 
@@ -117,7 +131,7 @@ func (cl *Client) GetRequestToken(ctx context.Context, cb_url string) (*auth.Req
 	return auth.UnmarshalRequestToken(string(rsp_body))
 }
 
-func (cl *Client) AuthorizationURL(ctx context.Context, req *auth.RequestToken, perms string) (*url.URL, error) {
+func (cl *OAuth1Client) AuthorizationURL(ctx context.Context, req *auth.RequestToken, perms string) (*url.URL, error) {
 
 	q := url.Values{}
 	q.Set("oauth_token", req.Token)
@@ -132,14 +146,13 @@ func (cl *Client) AuthorizationURL(ctx context.Context, req *auth.RequestToken, 
 		return nil, err
 	}
 
-	u.Path = filepath.Join(u.Path, AUTH_AUTHORIZE)
-
+	u.Path = filepath.Join(u.Path, OAUTH1_AUTHORIZE)
 	u.RawQuery = q.Encode()
 
 	return u, nil
 }
 
-func (cl *Client) GetAccessToken(ctx context.Context, req_token *auth.RequestToken, auth_token *auth.AuthorizationToken) (*auth.AccessToken, error) {
+func (cl *OAuth1Client) GetAccessToken(ctx context.Context, req_token *auth.RequestToken, auth_token *auth.AuthorizationToken) (*auth.AccessToken, error) {
 
 	endpoint, err := url.Parse(API)
 
@@ -147,11 +160,15 @@ func (cl *Client) GetAccessToken(ctx context.Context, req_token *auth.RequestTok
 		return nil, err
 	}
 
-	endpoint.Path = filepath.Join(endpoint.Path, AUTH_TOKEN)
+	endpoint.Path = filepath.Join(endpoint.Path, OAUTH1_TOKEN)
 
 	http_method := "GET"
 
 	args := &url.Values{}
+
+	// See what's going on here? The token is coming from the authentication
+	// response but the secret is coming from the request response. It took
+	// me a long time to figure that out... (20210331/thisisaaronland)
 
 	args.Set("oauth_token", auth_token.Token)
 	args.Set("oauth_verifier", auth_token.Verifier)
@@ -187,7 +204,7 @@ func (cl *Client) GetAccessToken(ctx context.Context, req_token *auth.RequestTok
 	return auth.UnmarshalAccessToken(string(rsp_body))
 }
 
-func (cl *Client) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadSeekCloser, error) {
+func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadSeekCloser, error) {
 
 	endpoint, err := url.Parse(API)
 
@@ -199,7 +216,14 @@ func (cl *Client) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadS
 
 	http_method := "GET"
 
-	args, err = cl.prepareArgs(http_method, endpoint, args)
+	args.Set("nojsoncallback", "1")
+	args.Set("format", "json")
+
+	if cl.oauth_token != "" {
+		args.Set("oauth_token", cl.oauth_token)
+	}
+
+	args, err = cl.signArgs(http_method, endpoint, args, cl.oauth_token_secret)
 
 	if err != nil {
 		return nil, err
@@ -216,7 +240,7 @@ func (cl *Client) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadS
 	return cl.call(ctx, req)
 }
 
-func (cl *Client) call(ctx context.Context, req *http.Request) (io.ReadSeekCloser, error) {
+func (cl *OAuth1Client) call(ctx context.Context, req *http.Request) (io.ReadSeekCloser, error) {
 
 	req = req.WithContext(ctx)
 
@@ -234,19 +258,7 @@ func (cl *Client) call(ctx context.Context, req *http.Request) (io.ReadSeekClose
 	return ioutil.NewReadSeekCloser(rsp.Body)
 }
 
-func (cl *Client) prepareArgs(http_method string, endpoint *url.URL, args *url.Values) (*url.Values, error) {
-
-	args.Set("nojsoncallback", "1")
-	args.Set("format", "json")
-
-	if cl.oauth_token != "" {
-		args.Set("oauth_token", cl.oauth_token)
-	}
-
-	return cl.signArgs(http_method, endpoint, args, cl.oauth_token_secret)
-}
-
-func (cl *Client) signArgs(http_method string, endpoint *url.URL, args *url.Values, secret string) (*url.Values, error) {
+func (cl *OAuth1Client) signArgs(http_method string, endpoint *url.URL, args *url.Values, secret string) (*url.Values, error) {
 
 	now := time.Now()
 	ts := now.Unix()
@@ -268,7 +280,7 @@ func (cl *Client) signArgs(http_method string, endpoint *url.URL, args *url.Valu
 	return args, nil
 }
 
-func (cl *Client) getSignature(http_method string, endpoint *url.URL, args *url.Values, token_secret string) string {
+func (cl *OAuth1Client) getSignature(http_method string, endpoint *url.URL, args *url.Values, token_secret string) string {
 
 	key := fmt.Sprintf("%s&%s", url.QueryEscape(cl.consumer_secret), url.QueryEscape(token_secret))
 	base_string := auth.GenerateSigningBaseString(http_method, endpoint, args)

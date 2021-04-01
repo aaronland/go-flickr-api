@@ -5,6 +5,7 @@ github.com/aaronland/go-http-sanitize
 ## explicit
 github.com/aaronland/go-http-server
 # github.com/aaronland/go-roster v0.0.2
+## explicit
 github.com/aaronland/go-roster
 # github.com/aws/aws-lambda-go v1.10.0
 github.com/aws/aws-lambda-go/events

@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/aaronland/go-flickr-api"
+	"github.com/aaronland/go-flickr-api/client"
 	"github.com/sfomuseum/go-flags/multi"
 	"io"
 	"log"
@@ -16,13 +16,13 @@ func main() {
 	var params multi.KeyValueString
 	flag.Var(&params, "param", "...")
 
-	client_uri := flag.String("client-uri", "", "...")
+	client_uri := flag.String("client-uri", "oauth1://", "...")
 
 	flag.Parse()
 
 	ctx := context.Background()
 
-	cl, err := api.NewClient(ctx, *client_uri)
+	cl, err := client.NewClient(ctx, *client_uri)
 
 	if err != nil {
 		log.Fatalf("Failed to create client, %v", err)
