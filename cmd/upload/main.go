@@ -5,12 +5,9 @@ import (
 	"flag"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/reader"
-	"github.com/aaronland/go-flickr-api/response"
 	"github.com/sfomuseum/go-flags/multi"
-	"io"
 	"log"
 	"net/url"
-	"os"
 )
 
 func main() {
@@ -57,29 +54,6 @@ func main() {
 		}
 
 		log.Println("OK", photo_id)
-		continue
-
-		rsp, err := cl.Upload(ctx, fh, args)
-
-		if err != nil {
-			log.Fatalf("Failed to upload '%s', %v", err)
-		}
-
-		io.Copy(os.Stdout, rsp)
-
-		rsp.Seek(0, 0)
-
-		up, err := response.UnmarshalUploadResponse(rsp)
-
-		if err != nil {
-			log.Fatalf("Failed to unmarshal upload response, %v", err)
-		}
-
-		if up.Error != nil {
-			log.Fatalf("Upload failed, %v", err)
-		}
-
-		log.Println(up.PhotoId)
 	}
 
 }

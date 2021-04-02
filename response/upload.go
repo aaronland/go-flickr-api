@@ -12,7 +12,7 @@ type Upload struct {
 	PhotoId int64    `xml:"photoid"`
 }
 
-type Ticket struct {
+type UploadTicket struct {
 	XMLName  xml.Name `xml:"rsp"`
 	Status   string   `xml:"stat,attr"`
 	Error    *Error   `xml:"err,omitempty"`
@@ -38,7 +38,7 @@ func UnmarshalUploadResponse(fh io.Reader) (*Upload, error) {
 	return up, nil
 }
 
-func UnmarshalTicketResponse(fh io.Reader) (*Ticket, error) {
+func UnmarshalUploadTicketResponse(fh io.Reader) (*UploadTicket, error) {
 
 	body, err := io.ReadAll(fh)
 
@@ -46,7 +46,7 @@ func UnmarshalTicketResponse(fh io.Reader) (*Ticket, error) {
 		return nil, err
 	}
 
-	var up *Ticket
+	var up *UploadTicket
 
 	err = xml.Unmarshal([]byte(body), &up)
 

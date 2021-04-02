@@ -57,7 +57,7 @@ func main() {
 
 	if *paginated {
 
-		err := client.ExecuteMethodPaginated(ctx, cl, args, cb)
+		err := client.ExecuteMethodPaginatedWithClient(ctx, cl, args, cb)
 
 		if err != nil {
 			log.Fatalf("Failed to write method results, %v", err)

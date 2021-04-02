@@ -8,7 +8,7 @@ import (
 	"github.com/aaronland/go-flickr-api/response"
 	"io"
 	"net/url"
-	"os"
+	_ "os"
 	"strconv"
 	"time"
 )
@@ -29,7 +29,7 @@ type Client interface {
 
 type ExecuteMethodPaginatedCallback func(context.Context, io.ReadSeekCloser, error) error
 
-func ExecuteMethodPaginated(ctx context.Context, cl Client, args *url.Values, cb ExecuteMethodPaginatedCallback) error {
+func ExecuteMethodPaginatedWithClient(ctx context.Context, cl Client, args *url.Values, cb ExecuteMethodPaginatedCallback) error {
 
 	page := 1
 	pages := -1
@@ -114,7 +114,7 @@ func ReplaceAsyncWithClient(ctx context.Context, cl Client, fh io.Reader, args *
 
 func checkAsyncResponseWithClient(ctx context.Context, cl Client, rsp_fh io.ReadSeekCloser) (int64, error) {
 
-	ticket, err := response.UnmarshalTicketResponse(rsp_fh)
+	ticket, err := response.UnmarshalUploadTicketResponse(rsp_fh)
 
 	if err != nil {
 		return 0, err
@@ -131,9 +131,7 @@ func checkAsyncResponseWithClient(ctx context.Context, cl Client, rsp_fh io.Read
 	return CheckTicketWithClient(ctx, cl, ticket)
 }
 
-func CheckTicketWithClient(ctx context.Context, cl Client, ticket *response.Ticket) (int64, error) {
-
-	// SET TIMEOUT HERE
+func CheckTicketWithClient(ctx context.Context, cl Client, ticket *response.UploadTicket) (int64, error) {
 
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
@@ -147,9 +145,6 @@ func CheckTicketWithClient(ctx context.Context, cl Client, ticket *response.Tick
 			args := &url.Values{}
 			args.Set("method", "flickr.photos.upload.checkTickets")
 			args.Set("tickets", ticket.TicketId)
-			// args.Set("format", "rest")
-
-			// {"uploader":{"ticket":[{"id":"161192644-72157718847464617","complete":1,"photoid":"51090628667","imported":"1617400985"}]},"stat":"ok"}
 
 			check_rsp, err := cl.ExecuteMethod(ctx, args)
 
@@ -157,7 +152,35 @@ func CheckTicketWithClient(ctx context.Context, cl Client, ticket *response.Tick
 				return 0, err
 			}
 
-			io.Copy(os.Stdout, check_rsp)
+			check_ticket, err := response.UnmarshalCheckTicketResponse(check_rsp)
+
+			if err != nil {
+				return 0, err
+			}
+
+			for _, t := range check_ticket.Uploader.Tickets {
+
+				if t.TicketId != ticket.TicketId {
+					continue
+				}
+
+				if t.Complete != 1 {
+					continue
+				}
+
+				// Because the Flickr API returns strings
+				// for photo IDs
+
+				str_id := t.PhotoId
+
+				id, err := strconv.ParseInt(str_id, 10, 64)
+
+				if err != nil {
+					return 0, err
+				}
+
+				return id, nil
+			}
 		}
 	}
 
