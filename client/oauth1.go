@@ -228,7 +228,7 @@ func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io
 		args.Set("nojsoncallback", "1")
 		args.Set("format", "json")
 	}
-	
+
 	if cl.oauth_token != "" {
 		args.Set("oauth_token", cl.oauth_token)
 	}

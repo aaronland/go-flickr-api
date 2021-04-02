@@ -18,6 +18,8 @@ func main() {
 
 	client_uri := flag.String("client-uri", "oauth1://", "...")
 
+	paginated := flag.Bool("paginated", false, "...")
+
 	flag.Parse()
 
 	if len(params) == 0 {
@@ -38,15 +40,37 @@ func main() {
 		args.Set(kv.Key(), kv.Value().(string))
 	}
 
-	fh, err := cl.ExecuteMethod(ctx, args)
+	cb := func(ctx context.Context, fh io.ReadSeekCloser, err error) error {
 
-	if err != nil {
-		log.Fatalf("Failed to execute method, %v", err)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(os.Stdout, fh)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	_, err = io.Copy(os.Stdout, fh)
+	if *paginated {
 
-	if err != nil {
-		log.Fatalf("Failed to write method results, %v", err)
+		err := client.ExecuteMethodPaginated(ctx, cl, args, cb)
+
+		if err != nil {
+			log.Fatalf("Failed to write method results, %v", err)
+		}
+
+	} else {
+
+		fh, err := cl.ExecuteMethod(ctx, args)
+
+		err = cb(ctx, fh, err)
+
+		if err != nil {
+			log.Fatalf("Failed to write method results, %v", err)
+		}
 	}
 }

@@ -28,6 +28,13 @@ github.com/googleapis/gax-go/v2
 # github.com/sfomuseum/go-flags v0.8.2
 ## explicit
 github.com/sfomuseum/go-flags/multi
+# github.com/tidwall/gjson v1.7.4
+## explicit
+github.com/tidwall/gjson
+# github.com/tidwall/match v1.0.3
+github.com/tidwall/match
+# github.com/tidwall/pretty v1.1.0
+github.com/tidwall/pretty
 # github.com/whosonfirst/algnhsa v0.1.0
 github.com/whosonfirst/algnhsa
 # github.com/whosonfirst/go-ioutil v0.0.1
