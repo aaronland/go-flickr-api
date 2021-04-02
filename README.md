@@ -47,7 +47,9 @@ The core of this package's approach to the Flickr API is the `ExecuteMethod` met
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
 ```
 
-This package does not define any Go types or structs mapping to individual API responses yet. In time there may be, along with helper methods for unmarshaling API responses in to typed responses but the baseline for all operations will remain: Query (`url.Values`) parameters sent over HTTP returning an `io.ReadSeekCloser` instance that is inspected and validated according to the needs and uses of the tools using the Flickr API.
+This package only defines a handful of Go types or structs mapping to individual API responses. So far these are all specific to operations relating to uploading or replacing photos.
+
+In time there may be, along with helper methods for unmarshaling API responses in to typed responses but the baseline for all operations will remain: Query (`url.Values`) parameters sent over HTTP returning an `io.ReadSeekCloser` instance that is inspected and validated according to the needs and uses of the tools using the Flickr API.
 
 ## Interfaces
 
@@ -88,9 +90,7 @@ type Client interface {
 	GetAccessToken(context.Context, auth.RequestToken, auth.AuthorizationToken) (auth.AccessToken, error)
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
 	Upload(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
-	UploadAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
 	Replace(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
-	ReplaceAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)		
 }
 ```
 
@@ -99,8 +99,6 @@ type Client interface {
 ```
 type ExecuteMethodPaginatedCallback func(context.Context, io.ReadSeekCloser, error) error
 ```
-
-_Important: This interface may still change._
 
 ## Tools
 

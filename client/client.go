@@ -3,12 +3,10 @@ package client
 import (
 	"context"
 	"fmt"
-	"github.com/aaronland/go-flickr-api"
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/aaronland/go-flickr-api/response"
 	"io"
 	"net/url"
-	_ "os"
 	"strconv"
 	"time"
 )
@@ -65,7 +63,7 @@ func ExecuteMethodPaginatedWithClient(ctx context.Context, cl Client, args *url.
 
 		if pages == -1 {
 
-			pagination, err := api.DerivePagination(ctx, fh)
+			pagination, err := response.DerivePagination(ctx, fh)
 
 			if err != nil {
 				return err
