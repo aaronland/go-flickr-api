@@ -251,6 +251,9 @@ func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io
 }
 
 func (cl *OAuth1Client) Upload(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {
+
+	// https://github.com/masci/flickr/blob/v2/upload.go
+
 	return nil, fmt.Errorf("Not implemented")
 }
 
