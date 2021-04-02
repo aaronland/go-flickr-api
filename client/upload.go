@@ -29,7 +29,7 @@ func randomBoundary() (string, error) {
 
 // Encode the file and request parameters in a multipart body.
 // File contents are streamed into the request using an io.Pipe in a separated goroutine
-func streamUploadBody(ctx context.Context, fh io.Reader, args *url.Values, body *io.PipeWriter, file_name string, boundary string) error {
+func streamUploadBody(ctx context.Context, body *io.PipeWriter, file_name string, boundary string, fh io.Reader, args *url.Values) error {
 
 	// multipart writer to fill the body
 	defer body.Close()

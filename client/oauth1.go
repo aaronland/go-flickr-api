@@ -6,17 +6,16 @@ import (
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/whosonfirst/go-ioutil"
 	"io"
-	_ "log"
+	"log"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"strconv"
 	"time"
 )
 
-const OAUTH1_REQUEST = "oauth/request_token"
-const OAUTH1_AUTHORIZE = "oauth/authorize"
-const OAUTH1_TOKEN = "oauth/access_token"
+const OAUTH1_AUTHORIZE_ENDPOINT string = "https://www.flickr.com/services/oauth/authorize"
+const OAUTH1_REQUEST_TOKEN_ENDPOINT string = "https://www.flickr.com/services/oauth/request_token"
+const OAUTH1_ACCESS_TOKEN_ENDPOINT string = "https://www.flickr.com/services/oauth/access_token"
 
 func init() {
 
@@ -95,13 +94,11 @@ func (cl *OAuth1Client) WithAccessToken(ctx context.Context, access_token auth.A
 
 func (cl *OAuth1Client) GetRequestToken(ctx context.Context, cb_url string) (auth.RequestToken, error) {
 
-	endpoint, err := url.Parse(API)
+	endpoint, err := url.Parse(OAUTH1_REQUEST_TOKEN_ENDPOINT)
 
 	if err != nil {
 		return nil, err
 	}
-
-	endpoint.Path = filepath.Join(endpoint.Path, OAUTH1_REQUEST)
 
 	http_method := "GET"
 
@@ -148,27 +145,24 @@ func (cl *OAuth1Client) GetAuthorizationURL(ctx context.Context, req auth.Reques
 		q.Set("perms", perms)
 	}
 
-	u, err := url.Parse(API)
+	endpoint, err := url.Parse(OAUTH1_AUTHORIZE_ENDPOINT)
 
 	if err != nil {
 		return "", err
 	}
 
-	u.Path = filepath.Join(u.Path, OAUTH1_AUTHORIZE)
-	u.RawQuery = q.Encode()
+	endpoint.RawQuery = q.Encode()
 
-	return u.String(), nil
+	return endpoint.String(), nil
 }
 
 func (cl *OAuth1Client) GetAccessToken(ctx context.Context, req_token auth.RequestToken, auth_token auth.AuthorizationToken) (auth.AccessToken, error) {
 
-	endpoint, err := url.Parse(API)
+	endpoint, err := url.Parse(OAUTH1_ACCESS_TOKEN_ENDPOINT)
 
 	if err != nil {
 		return nil, err
 	}
-
-	endpoint.Path = filepath.Join(endpoint.Path, OAUTH1_TOKEN)
 
 	http_method := "GET"
 
@@ -214,13 +208,11 @@ func (cl *OAuth1Client) GetAccessToken(ctx context.Context, req_token auth.Reque
 
 func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadSeekCloser, error) {
 
-	endpoint, err := url.Parse(API)
+	endpoint, err := url.Parse(API_ENDPOINT)
 
 	if err != nil {
 		return nil, err
 	}
-
-	endpoint.Path = filepath.Join(endpoint.Path, REST)
 
 	http_method := "GET"
 
@@ -250,15 +242,65 @@ func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io
 	return cl.call(ctx, req)
 }
 
-func (cl *OAuth1Client) Upload(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {
+func (cl *OAuth1Client) Upload(ctx context.Context, fh io.Reader, args *url.Values) (io.ReadSeekCloser, error) {
+
+	endpoint, err := url.Parse(UPLOAD_ENDPOINT)
+
+	if err != nil {
+		return nil, err
+	}
 
 	// https://github.com/masci/flickr/blob/v2/upload.go
 
-	return nil, fmt.Errorf("Not implemented")
+	http_method := "POST"
+
+	// TO DO: SIGN STUFF HERE
+
+	name := "debug"
+	boundary, err := randomBoundary()
+
+	if err != nil {
+		return nil, err
+	}
+
+	r, w := io.Pipe()
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	go func() {
+
+		err := streamUploadBody(ctx, w, name, boundary, fh, args)
+
+		if err != nil {
+			log.Printf("Failed to stream upload body for '%s', %v", name, err)
+			cancel()
+		}
+	}()
+
+	req, err := http.NewRequest(http_method, endpoint.String(), r)
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("content-type", "multipart/form-data; boundary="+boundary)
+	req.ContentLength = -1 // unknown
+
+	return cl.call(ctx, req)
 }
 
-func (cl *OAuth1Client) UploadAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {
-	return nil, fmt.Errorf("Not implemented")
+func (cl *OAuth1Client) UploadAsync(ctx context.Context, fh io.Reader, args *url.Values) (io.ReadSeekCloser, error) {
+
+	args.Set("async", "1")
+
+	fh, err := cl.Upload(ctx, fh, args)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, fmt.Errorf("Async stuff not complete")
 }
 
 func (cl *OAuth1Client) Replace(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {

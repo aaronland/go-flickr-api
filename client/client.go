@@ -10,8 +10,8 @@ import (
 	"strconv"
 )
 
-const API string = "https://www.flickr.com/services"
-const REST string = "rest"
+const API_ENDPOINT string = "https://api.flickr.com/services/rest"
+const UPLOAD_ENDPOINT string = "https://up.flickr.com/services/upload/"
 
 type Client interface {
 	WithAccessToken(context.Context, auth.AccessToken) (Client, error)
