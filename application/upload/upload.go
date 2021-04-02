@@ -2,20 +2,29 @@ package upload
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/reader"
 	"github.com/sfomuseum/go-flags/flagset"
 	"github.com/sfomuseum/go-flags/multi"
-	_ "github.com/sfomuseum/runtimevar"
+	"github.com/sfomuseum/runtimevar"
 	_ "gocloud.dev/runtimevar/constantvar"
 	"log"
 	"net/url"
+	"os"
 )
 
 var params multi.KeyValueString
 var client_uri string
+var use_runtimevar bool
+
+type UploadResult struct {
+	Path    string `json:"path,omitempty"`
+	PhotoId int64  `json:"photoid,omitempty"`
+	Error   error  `json:"error,omitempty"`
+}
 
 type UploadApplication struct {
 }
@@ -25,7 +34,8 @@ func (app *UploadApplication) DefaultFlagSet() *flag.FlagSet {
 	fs := flagset.NewFlagSet("upload")
 
 	fs.StringVar(&client_uri, "client-uri", "", "...")
-	fs.Var(&params, "param", "...")
+	fs.BoolVar(&use_runtimevar, "use-runtimevar", false, "")
+	fs.Var(&params, "param", "Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.")
 
 	return fs
 }
@@ -39,16 +49,25 @@ func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagS
 
 	flagset.Parse(fs)
 
-	paths := fs.Args()
-
-	/*
-	client_uri, err := runtimevar.StringVar(ctx, client_uri)
+	err := flagset.SetFlagsFromEnvVars(fs, "FLICKR")
 
 	if err != nil {
 		return err
 	}
-	*/
-	
+
+	paths := fs.Args()
+
+	if use_runtimevar {
+
+		runtime_uri, err := runtimevar.StringVar(ctx, client_uri)
+
+		if err != nil {
+			return fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
+		}
+
+		client_uri = runtime_uri
+	}
+
 	cl, err := client.NewClient(ctx, client_uri)
 
 	if err != nil {
@@ -61,25 +80,64 @@ func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagS
 		args.Set(kv.Key(), kv.Value().(string))
 	}
 
-	// Do this concurrently...
+	done_ch := make(chan bool)
+	rsp_ch := make(chan *UploadResult)
 
 	for _, path := range paths {
 
-		fh, err := reader.NewReader(ctx, path)
+		go func(path string) {
 
-		if err != nil {
-			return fmt.Errorf("Failed to create reader for '%s', %v", path, err)
+			defer func() {
+				done_ch <- true
+			}()
+
+			rsp := &UploadResult{
+				Path: path,
+			}
+
+			fh, err := reader.NewReader(ctx, path)
+
+			if err != nil {
+				rsp.Error = fmt.Errorf("Failed to create reader for '%s', %v", path, err)
+				rsp_ch <- rsp
+				return
+			}
+
+			defer fh.Close()
+
+			photo_id, err := client.UploadAsyncWithClient(ctx, cl, fh, args)
+
+			if err != nil {
+				rsp.Error = fmt.Errorf("Failed to upload '%s', %v", err)
+				rsp_ch <- rsp
+				return
+			}
+
+			rsp.PhotoId = photo_id
+			rsp_ch <- rsp
+			return
+		}(path)
+	}
+
+	remaining := len(paths)
+	results := make([]*UploadResult, 0)
+
+	for remaining > 0 {
+		select {
+		case <-done_ch:
+			remaining -= 1
+		case rsp := <-rsp_ch:
+			results = append(results, rsp)
+		default:
+			// pass
 		}
+	}
 
-		defer fh.Close()
+	enc := json.NewEncoder(os.Stdout)
+	err = enc.Encode(results)
 
-		photo_id, err := client.UploadAsyncWithClient(ctx, cl, fh, args)
-
-		if err != nil {
-			return fmt.Errorf("Failed to upload '%s', %v", err)
-		}
-
-		log.Println("OK", photo_id)
+	if err != nil {
+		log.Fatalf("Failed to encode results, %v", err)
 	}
 
 	return nil
