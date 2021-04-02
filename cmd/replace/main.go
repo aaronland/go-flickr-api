@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"github.com/aaronland/go-flickr-api/client"
+	"github.com/aaronland/go-flickr-api/response"
 	"github.com/sfomuseum/go-flags/multi"
 	"io"
 	"log"
@@ -49,9 +50,22 @@ func main() {
 		rsp, err := cl.Replace(ctx, fh, args)
 
 		if err != nil {
-			log.Printf("Failed to upload '%s', %v", err)
+			log.Printf("Failed to replace '%s', %v", err)
 		}
 
+		up, err := response.UnmarshalUploadResponse(rsp)
+
+		if err != nil {
+			log.Fatalf("Failed to unmarshal upload response, %v", err)
+		}
+
+		if up.Error != nil {
+			log.Fatalf("Upload failed, %v", up.Error)
+		}
+
+		log.Println(up, up.Error)
+
+		rsp.Seek(0, 0)
 		io.Copy(os.Stdout, rsp)
 	}
 
