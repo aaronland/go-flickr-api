@@ -10,7 +10,6 @@ import (
 	"github.com/sfomuseum/go-flags/flagset"
 	"github.com/sfomuseum/go-flags/multi"
 	"github.com/sfomuseum/runtimevar"
-	_ "gocloud.dev/runtimevar/constantvar"
 	"log"
 	"net/url"
 	"os"
@@ -26,8 +25,7 @@ type UploadResult struct {
 	Error   error  `json:"error,omitempty"`
 }
 
-type UploadApplication struct {
-}
+type UploadApplication struct{}
 
 func (app *UploadApplication) DefaultFlagSet() *flag.FlagSet {
 

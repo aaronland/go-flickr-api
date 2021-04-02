@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/aaronland/go-flickr-api/application/upload"
+	_ "gocloud.dev/runtimevar/constantvar"
 	"log"
 )
 
