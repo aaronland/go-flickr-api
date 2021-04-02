@@ -1,3 +1,5 @@
+# github.com/aaronland/go-aws-session v0.0.4
+github.com/aaronland/go-aws-session
 # github.com/aaronland/go-http-sanitize v0.0.5
 ## explicit
 github.com/aaronland/go-http-sanitize
@@ -7,12 +9,52 @@ github.com/aaronland/go-http-server
 # github.com/aaronland/go-roster v0.0.2
 ## explicit
 github.com/aaronland/go-roster
+# github.com/aaronland/go-string v0.1.1
+github.com/aaronland/go-string/dsn
 # github.com/aws/aws-lambda-go v1.10.0
 github.com/aws/aws-lambda-go/events
 github.com/aws/aws-lambda-go/lambda
 github.com/aws/aws-lambda-go/lambda/handlertrace
 github.com/aws/aws-lambda-go/lambda/messages
 github.com/aws/aws-lambda-go/lambdacontext
+# github.com/aws/aws-sdk-go v1.36.1
+github.com/aws/aws-sdk-go/aws
+github.com/aws/aws-sdk-go/aws/awserr
+github.com/aws/aws-sdk-go/aws/awsutil
+github.com/aws/aws-sdk-go/aws/client
+github.com/aws/aws-sdk-go/aws/client/metadata
+github.com/aws/aws-sdk-go/aws/corehandlers
+github.com/aws/aws-sdk-go/aws/credentials
+github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds
+github.com/aws/aws-sdk-go/aws/credentials/endpointcreds
+github.com/aws/aws-sdk-go/aws/credentials/processcreds
+github.com/aws/aws-sdk-go/aws/credentials/stscreds
+github.com/aws/aws-sdk-go/aws/csm
+github.com/aws/aws-sdk-go/aws/defaults
+github.com/aws/aws-sdk-go/aws/ec2metadata
+github.com/aws/aws-sdk-go/aws/endpoints
+github.com/aws/aws-sdk-go/aws/request
+github.com/aws/aws-sdk-go/aws/session
+github.com/aws/aws-sdk-go/aws/signer/v4
+github.com/aws/aws-sdk-go/internal/context
+github.com/aws/aws-sdk-go/internal/ini
+github.com/aws/aws-sdk-go/internal/sdkio
+github.com/aws/aws-sdk-go/internal/sdkmath
+github.com/aws/aws-sdk-go/internal/sdkrand
+github.com/aws/aws-sdk-go/internal/sdkuri
+github.com/aws/aws-sdk-go/internal/shareddefaults
+github.com/aws/aws-sdk-go/internal/strings
+github.com/aws/aws-sdk-go/internal/sync/singleflight
+github.com/aws/aws-sdk-go/private/protocol
+github.com/aws/aws-sdk-go/private/protocol/json/jsonutil
+github.com/aws/aws-sdk-go/private/protocol/jsonrpc
+github.com/aws/aws-sdk-go/private/protocol/query
+github.com/aws/aws-sdk-go/private/protocol/query/queryutil
+github.com/aws/aws-sdk-go/private/protocol/rest
+github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
+github.com/aws/aws-sdk-go/service/ssm
+github.com/aws/aws-sdk-go/service/sts
+github.com/aws/aws-sdk-go/service/sts/stsiface
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.4.3
@@ -23,11 +65,19 @@ github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/google/uuid v1.1.2
 github.com/google/uuid
+# github.com/google/wire v0.4.0
+github.com/google/wire
 # github.com/googleapis/gax-go/v2 v2.0.5
 github.com/googleapis/gax-go/v2
+# github.com/jmespath/go-jmespath v0.4.0
+github.com/jmespath/go-jmespath
 # github.com/sfomuseum/go-flags v0.8.2
 ## explicit
+github.com/sfomuseum/go-flags/flagset
 github.com/sfomuseum/go-flags/multi
+# github.com/sfomuseum/runtimevar v0.0.4
+## explicit
+github.com/sfomuseum/runtimevar
 # github.com/tidwall/gjson v1.7.4
 ## explicit
 github.com/tidwall/gjson
@@ -60,6 +110,7 @@ go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
 # gocloud.dev v0.22.0
 ## explicit
+gocloud.dev/aws
 gocloud.dev/blob
 gocloud.dev/blob/driver
 gocloud.dev/blob/fileblob
@@ -73,6 +124,12 @@ gocloud.dev/internal/gcerr
 gocloud.dev/internal/oc
 gocloud.dev/internal/openurl
 gocloud.dev/internal/retry
+gocloud.dev/runtimevar
+gocloud.dev/runtimevar/awsparamstore
+gocloud.dev/runtimevar/constantvar
+gocloud.dev/runtimevar/driver
+gocloud.dev/secrets
+gocloud.dev/secrets/driver
 # golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
