@@ -5,7 +5,7 @@ import (
 	"flag"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/sfomuseum/go-flags/multi"
-	_ "io"
+	"io"
 	"log"
 	"net/url"
 	"os"
@@ -46,11 +46,13 @@ func main() {
 			log.Fatalf("Failed to open '%s', %v", err)
 		}
 
-		_, err = cl.Upload(ctx, fh, args)
+		rsp, err := cl.Upload(ctx, fh, args)
 
 		if err != nil {
 			log.Printf("Failed to upload '%s', %v", err)
 		}
+
+		io.Copy(os.Stdout, rsp)
 	}
 
 }

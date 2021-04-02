@@ -254,7 +254,18 @@ func (cl *OAuth1Client) Upload(ctx context.Context, fh io.Reader, args *url.Valu
 
 	http_method := "POST"
 
-	// TO DO: SIGN STUFF HERE
+	if args.Get("format") == "" {
+		args.Set("nojsoncallback", "1")
+		args.Set("format", "json")
+	}
+
+	args.Set("oauth_token", cl.oauth_token)
+
+	args, err = cl.signArgs(http_method, endpoint, args, cl.oauth_token_secret)
+
+	if err != nil {
+		return nil, err
+	}
 
 	name := "debug"
 	boundary, err := randomBoundary()
