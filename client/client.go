@@ -12,6 +12,7 @@ import (
 
 const API_ENDPOINT string = "https://api.flickr.com/services/rest"
 const UPLOAD_ENDPOINT string = "https://up.flickr.com/services/upload/"
+const REPLACE_ENDPOINT string = "https://up.flickr.com/services/replace/"
 
 type Client interface {
 	WithAccessToken(context.Context, auth.AccessToken) (Client, error)

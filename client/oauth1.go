@@ -250,55 +250,55 @@ func (cl *OAuth1Client) Upload(ctx context.Context, fh io.Reader, args *url.Valu
 		return nil, err
 	}
 
-	// https://github.com/masci/flickr/blob/v2/upload.go
+	return cl.upload(ctx, endpoint, fh, args)
 
-	http_method := "POST"
+	/*
+		http_method := "POST"
 
-	if args.Get("format") == "" {
-		args.Set("nojsoncallback", "1")
-		args.Set("format", "json")
-	}
+		args.Set("oauth_token", cl.oauth_token)
 
-	args.Set("oauth_token", cl.oauth_token)
-
-	args, err = cl.signArgs(http_method, endpoint, args, cl.oauth_token_secret)
-
-	if err != nil {
-		return nil, err
-	}
-
-	name := "debug"
-	boundary, err := randomBoundary()
-
-	if err != nil {
-		return nil, err
-	}
-
-	r, w := io.Pipe()
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	go func() {
-
-		err := streamUploadBody(ctx, w, name, boundary, fh, args)
+		args, err = cl.signArgs(http_method, endpoint, args, cl.oauth_token_secret)
 
 		if err != nil {
-			log.Printf("Failed to stream upload body for '%s', %v", name, err)
-			cancel()
+			return nil, err
 		}
-	}()
 
-	req, err := http.NewRequest(http_method, endpoint.String(), r)
+		fname := "upload"
+		boundary, err := randomBoundary()
 
-	if err != nil {
-		return nil, err
-	}
+		if err != nil {
+			return nil, err
+		}
 
-	req.Header.Set("content-type", "multipart/form-data; boundary="+boundary)
-	req.ContentLength = -1 // unknown
+		r, w := io.Pipe()
 
-	return cl.call(ctx, req)
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		go func() {
+
+			err := streamUploadBody(ctx, w, fname, boundary, fh, args)
+
+			if err != nil {
+				log.Printf("Failed to stream upload body for '%s', %v", name, err)
+				cancel()
+			}
+		}()
+
+		req, err := http.NewRequest(http_method, endpoint.String(), r)
+
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("content-type", "multipart/form-data; boundary="+boundary)
+		req.ContentLength = -1 // unknown
+
+		// This response is formatted in the REST API response style.
+		// https://www.flickr.com/services/api/response.rest.html
+
+		return cl.call(ctx, req)
+	*/
 }
 
 func (cl *OAuth1Client) UploadAsync(ctx context.Context, fh io.Reader, args *url.Values) (io.ReadSeekCloser, error) {
@@ -314,12 +314,68 @@ func (cl *OAuth1Client) UploadAsync(ctx context.Context, fh io.Reader, args *url
 	return nil, fmt.Errorf("Async stuff not complete")
 }
 
-func (cl *OAuth1Client) Replace(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {
-	return nil, fmt.Errorf("Not implemented")
+func (cl *OAuth1Client) Replace(ctx context.Context, fh io.Reader, args *url.Values) (io.ReadSeekCloser, error) {
+
+	endpoint, err := url.Parse(REPLACE_ENDPOINT)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return cl.upload(ctx, endpoint, fh, args)
 }
 
 func (cl *OAuth1Client) ReplaceAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {
 	return nil, fmt.Errorf("Not implemented")
+}
+
+func (cl *OAuth1Client) upload(ctx context.Context, endpoint *url.URL, fh io.Reader, args *url.Values) (io.ReadSeekCloser, error) {
+
+	http_method := "POST"
+
+	args.Set("oauth_token", cl.oauth_token)
+
+	args, err := cl.signArgs(http_method, endpoint, args, cl.oauth_token_secret)
+
+	if err != nil {
+		return nil, err
+	}
+
+	fname := "upload"
+	boundary, err := randomBoundary()
+
+	if err != nil {
+		return nil, err
+	}
+
+	r, w := io.Pipe()
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	go func() {
+
+		err := streamUploadBody(ctx, w, fname, boundary, fh, args)
+
+		if err != nil {
+			log.Printf("Failed to stream upload body for '%s', %v", fname, err)
+			cancel()
+		}
+	}()
+
+	req, err := http.NewRequest(http_method, endpoint.String(), r)
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("content-type", "multipart/form-data; boundary="+boundary)
+	req.ContentLength = -1 // unknown
+
+	// This response is formatted in the REST API response style.
+	// https://www.flickr.com/services/api/response.rest.html
+
+	return cl.call(ctx, req)
 }
 
 func (cl *OAuth1Client) call(ctx context.Context, req *http.Request) (io.ReadSeekCloser, error) {
