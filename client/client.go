@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"github.com/aaronland/go-flickr-api"
 	"github.com/aaronland/go-flickr-api/auth"
+	"github.com/aaronland/go-flickr-api/response"
 	"io"
 	"net/url"
+	"os"
 	"strconv"
+	"time"
 )
 
 const API_ENDPOINT string = "https://api.flickr.com/services/rest"
@@ -21,9 +24,7 @@ type Client interface {
 	GetAccessToken(context.Context, auth.RequestToken, auth.AuthorizationToken) (auth.AccessToken, error)
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
 	Upload(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
-	UploadAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
 	Replace(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
-	ReplaceAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
 }
 
 type ExecuteMethodPaginatedCallback func(context.Context, io.ReadSeekCloser, error) error
@@ -83,4 +84,82 @@ func ExecuteMethodPaginated(ctx context.Context, cl Client, args *url.Values, cb
 	}
 
 	return nil
+}
+
+func UploadAsyncWithClient(ctx context.Context, cl Client, fh io.Reader, args *url.Values) (int64, error) {
+
+	args.Set("async", "1")
+
+	rsp, err := cl.Upload(ctx, fh, args)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return checkAsyncResponseWithClient(ctx, cl, rsp)
+}
+
+func ReplaceAsyncWithClient(ctx context.Context, cl Client, fh io.Reader, args *url.Values) (int64, error) {
+
+	args.Set("async", "1")
+
+	rsp, err := cl.Replace(ctx, fh, args)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return checkAsyncResponseWithClient(ctx, cl, rsp)
+}
+
+func checkAsyncResponseWithClient(ctx context.Context, cl Client, rsp_fh io.ReadSeekCloser) (int64, error) {
+
+	ticket, err := response.UnmarshalTicketResponse(rsp_fh)
+
+	if err != nil {
+		return 0, err
+	}
+
+	if ticket.Error != nil {
+		return 0, ticket.Error
+	}
+
+	if ticket.TicketId == "" {
+		return 0, fmt.Errorf("Missing ticket ID")
+	}
+
+	return CheckTicketWithClient(ctx, cl, ticket)
+}
+
+func CheckTicketWithClient(ctx context.Context, cl Client, ticket *response.Ticket) (int64, error) {
+
+	// SET TIMEOUT HERE
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return 0, nil
+		case <-ticker.C:
+
+			args := &url.Values{}
+			args.Set("method", "flickr.photos.upload.checkTickets")
+			args.Set("tickets", ticket.TicketId)
+			// args.Set("format", "rest")
+
+			// {"uploader":{"ticket":[{"id":"161192644-72157718847464617","complete":1,"photoid":"51090628667","imported":"1617400985"}]},"stat":"ok"}
+
+			check_rsp, err := cl.ExecuteMethod(ctx, args)
+
+			if err != nil {
+				return 0, err
+			}
+
+			io.Copy(os.Stdout, check_rsp)
+		}
+	}
+
+	return 0, nil
 }

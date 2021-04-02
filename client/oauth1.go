@@ -301,19 +301,6 @@ func (cl *OAuth1Client) Upload(ctx context.Context, fh io.Reader, args *url.Valu
 	*/
 }
 
-func (cl *OAuth1Client) UploadAsync(ctx context.Context, fh io.Reader, args *url.Values) (io.ReadSeekCloser, error) {
-
-	args.Set("async", "1")
-
-	fh, err := cl.Upload(ctx, fh, args)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, fmt.Errorf("Async stuff not complete")
-}
-
 func (cl *OAuth1Client) Replace(ctx context.Context, fh io.Reader, args *url.Values) (io.ReadSeekCloser, error) {
 
 	endpoint, err := url.Parse(REPLACE_ENDPOINT)
@@ -323,10 +310,6 @@ func (cl *OAuth1Client) Replace(ctx context.Context, fh io.Reader, args *url.Val
 	}
 
 	return cl.upload(ctx, endpoint, fh, args)
-}
-
-func (cl *OAuth1Client) ReplaceAsync(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error) {
-	return nil, fmt.Errorf("Not implemented")
 }
 
 func (cl *OAuth1Client) upload(ctx context.Context, endpoint *url.URL, fh io.Reader, args *url.Values) (io.ReadSeekCloser, error) {

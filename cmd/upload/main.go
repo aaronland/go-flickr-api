@@ -4,8 +4,10 @@ import (
 	"context"
 	"flag"
 	"github.com/aaronland/go-flickr-api/client"
+	"github.com/aaronland/go-flickr-api/reader"
 	"github.com/aaronland/go-flickr-api/response"
 	"github.com/sfomuseum/go-flags/multi"
+	"io"
 	"log"
 	"net/url"
 	"os"
@@ -40,17 +42,32 @@ func main() {
 
 	for _, path := range paths {
 
-		fh, err := os.Open(path)
+		fh, err := reader.NewReader(ctx, path)
 
 		if err != nil {
-			log.Fatalf("Failed to open '%s', %v", err)
+			log.Fatalf("Failed to create reader for '%s', %v", path, err)
 		}
+
+		defer fh.Close()
+
+		photo_id, err := client.UploadAsyncWithClient(ctx, cl, fh, args)
+
+		if err != nil {
+			log.Fatalf("Failed to upload '%s', %v", err)
+		}
+
+		log.Println("OK", photo_id)
+		continue
 
 		rsp, err := cl.Upload(ctx, fh, args)
 
 		if err != nil {
 			log.Fatalf("Failed to upload '%s', %v", err)
 		}
+
+		io.Copy(os.Stdout, rsp)
+
+		rsp.Seek(0, 0)
 
 		up, err := response.UnmarshalUploadResponse(rsp)
 

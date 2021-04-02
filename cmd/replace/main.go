@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"github.com/aaronland/go-flickr-api/client"
+	"github.com/aaronland/go-flickr-api/reader"
 	"github.com/aaronland/go-flickr-api/response"
 	"github.com/sfomuseum/go-flags/multi"
 	"io"
@@ -41,11 +42,13 @@ func main() {
 
 	for _, path := range paths {
 
-		fh, err := os.Open(path)
+		fh, err := reader.NewReader(ctx, path)
 
 		if err != nil {
-			log.Fatalf("Failed to open '%s', %v", err)
+			log.Fatalf("Failed to create reader for '%s', %v", path, err)
 		}
+
+		defer fh.Close()
 
 		rsp, err := cl.Replace(ctx, fh, args)
 
