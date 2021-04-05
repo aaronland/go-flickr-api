@@ -30,6 +30,11 @@ func (app *APIApplication) DefaultFlagSet() *flag.FlagSet {
 	fs.BoolVar(&paginated, "paginated", false, "Automatically paginate (and iterate through) all API responses.")
 	fs.Var(&params, "param", "Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.")
 
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		fs.PrintDefaults()
+	}
+
 	return fs
 }
 

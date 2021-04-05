@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// OAuth1 implmentation of the RequestToken interface.
 type OAuth1RequestToken struct {
 	RequestToken     `json:",omitempty"`
 	OAuthToken       string `json:"oath_token"`
@@ -25,6 +26,7 @@ func (t *OAuth1RequestToken) Secret() string {
 	return t.OAuthTokenSecret
 }
 
+// OAuth1 implmentation of the AuthorizationToken interface.
 type OAuth1AuthorizationToken struct {
 	AuthorizationToken `json:",omitempty"`
 	OAuthToken         string `json:"oath_token"`
@@ -39,6 +41,7 @@ func (t *OAuth1AuthorizationToken) Verifier() string {
 	return t.OAuthVerifier
 }
 
+// OAuth1 implmentation of the AccessToken interface.
 type OAuth1AccessToken struct {
 	AccessToken      `json:",omitempty"`
 	OAuthToken       string `json:"oauth_token"`
@@ -53,6 +56,7 @@ func (t *OAuth1AccessToken) Secret() string {
 	return t.OAuthTokenSecret
 }
 
+// Unmarshal an OAuth1 query-encoded request token response in to an RequestToken instance.
 func UnmarshalOAuth1RequestToken(str_q string) (RequestToken, error) {
 
 	q, err := url.ParseQuery(str_q)
@@ -80,6 +84,7 @@ func UnmarshalOAuth1RequestToken(str_q string) (RequestToken, error) {
 	return tok, nil
 }
 
+// Unmarshal an OAuth1 query-encoded authorization token response in to an AuthorizationToken instance.
 func UnmarshalOAuth1AuthorizationToken(str_q string) (AuthorizationToken, error) {
 
 	q, err := url.ParseQuery(str_q)
@@ -107,6 +112,7 @@ func UnmarshalOAuth1AuthorizationToken(str_q string) (AuthorizationToken, error)
 	return tok, nil
 }
 
+// Unmarshal an OAuth1 query-encoded access token response in to an AccessToken instance.
 func UnmarshalOAuth1AccessToken(str_q string) (AccessToken, error) {
 
 	q, err := url.ParseQuery(str_q)
@@ -155,6 +161,7 @@ the request URL, and all request parameters sorted by name, using lexicograhpica
 
 */
 
+// Generate an OAuth1 "base string" for generating request signatures.
 func GenerateOAuth1SigningBaseString(http_method string, endpoint *url.URL, args *url.Values) string {
 
 	endpoint_url := endpoint.String()
@@ -175,6 +182,7 @@ Use the base string as the text and the key is the concatenated values of the Co
 
 */
 
+// Generate an OAuth1 "signature" for API requests.
 func GenerateOAuth1Signature(key string, base string) string {
 
 	mac := hmac.New(sha1.New, []byte(key))

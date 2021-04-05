@@ -33,6 +33,11 @@ func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 	fs.BoolVar(&use_runtimevar, "use-runtimevar", false, "Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.")
 	fs.StringVar(&perms, "permissions", "", "A valid Flickr API permissions flag.")
 
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		fs.PrintDefaults()
+	}
+
 	return fs
 }
 
