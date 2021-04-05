@@ -28,10 +28,10 @@ func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 
 	fs := flagset.NewFlagSet("auth")
 
-	fs.StringVar(&client_uri, "client-uri", "", "...")
-	fs.StringVar(&server_uri, "server-uri", "", "...")
-	fs.BoolVar(&use_runtimevar, "use-runtimevar", false, "")
-	fs.StringVar(&perms, "permissions", "", "")
+	fs.StringVar(&client_uri, "client-uri", "", "A valid aaronland/go-flickr-api client URI.")
+	fs.StringVar(&server_uri, "server-uri", "", "A valid aaronland/go-http-server URI.")
+	fs.BoolVar(&use_runtimevar, "use-runtimevar", false, "Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.")
+	fs.StringVar(&perms, "permissions", "", "A valid Flickr API permissions flag.")
 
 	return fs
 }

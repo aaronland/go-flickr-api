@@ -27,8 +27,8 @@ func (app *ReplaceApplication) DefaultFlagSet() *flag.FlagSet {
 
 	fs := flagset.NewFlagSet("upload")
 
-	fs.StringVar(&client_uri, "client-uri", "", "...")
-	fs.BoolVar(&use_runtimevar, "use-runtimevar", false, "")
+	fs.StringVar(&client_uri, "client-uri", "", "A valid aaronland/go-flickr-api client URI.")
+	fs.BoolVar(&use_runtimevar, "use-runtimevar", false, "Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.")
 	fs.Var(&params, "param", "Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.")
 
 	return fs
