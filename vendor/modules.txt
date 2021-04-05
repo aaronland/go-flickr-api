@@ -55,6 +55,8 @@ github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
 github.com/aws/aws-sdk-go/service/ssm
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
+# github.com/fsnotify/fsnotify v1.4.9
+github.com/fsnotify/fsnotify
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.4.3
@@ -128,6 +130,7 @@ gocloud.dev/runtimevar
 gocloud.dev/runtimevar/awsparamstore
 gocloud.dev/runtimevar/constantvar
 gocloud.dev/runtimevar/driver
+gocloud.dev/runtimevar/filevar
 gocloud.dev/secrets
 gocloud.dev/secrets/driver
 # golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb

@@ -5,6 +5,7 @@ import (
 	"github.com/aaronland/go-flickr-api/application/auth/www"
 	_ "gocloud.dev/docstore/memdocstore"
 	_ "gocloud.dev/runtimevar/constantvar"
+	_ "gocloud.dev/runtimevar/filevar"
 	"log"
 )
 

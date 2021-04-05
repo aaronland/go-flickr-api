@@ -62,6 +62,11 @@ func Schemes() []string {
 
 func NewClient(ctx context.Context, uri string) (Client, error) {
 
+	// To account for things that might be gocloud.dev/runtimevar-encoded
+	// in a file using editors that automatically add newlines (thanks, Emacs)
+
+	uri = strings.TrimSpace(uri)
+
 	u, err := url.Parse(uri)
 
 	if err != nil {

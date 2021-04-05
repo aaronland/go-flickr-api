@@ -15,6 +15,7 @@ const API_ENDPOINT string = "https://api.flickr.com/services/rest"
 const UPLOAD_ENDPOINT string = "https://up.flickr.com/services/upload/"
 const REPLACE_ENDPOINT string = "https://up.flickr.com/services/replace/"
 
+// Client is the interface that defines common methods for all Flickr API Client.
 type Client interface {
 	WithAccessToken(context.Context, auth.AccessToken) (Client, error)
 	GetRequestToken(context.Context, string) (auth.RequestToken, error)

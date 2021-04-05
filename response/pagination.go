@@ -7,13 +7,19 @@ import (
 	"io"
 )
 
+// Pagination is a struct containing pagination metrics for a given API response.
 type Pagination struct {
-	Page    int `json:"page"`
-	Pages   int `json:"pages"`
+	// The current page of results for an API request.
+	Page int `json:"page"`
+	// The total number of pages of results for an API request.
+	Pages int `json:"pages"`
+	// The number of results, per page, for an API request.
 	PerPage int `json:"perpage"`
-	Total   int `json:total"`
+	// The total number of results, across all pages, for an API request.
+	Total int `json:total"`
 }
 
+// Given an API response try to derive pagination metrics.
 func DerivePagination(ctx context.Context, fh io.ReadSeekCloser) (*Pagination, error) {
 
 	body, err := io.ReadAll(fh)

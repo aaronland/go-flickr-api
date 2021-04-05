@@ -7,30 +7,29 @@ import (
 	"io"
 )
 
-/*
-
-<?xml version="1.0" encoding="utf-8" ?>
-<rsp stat="fail">
-	<err code="2" msg="No photo specified" />
-</rsp>
-
-*/
-
+// Error is a struct containing information about a failed API request.
 type Error struct {
-	Code    int    `xml:"code,attr"`
+	// The numeric code for the error.
+	Code int `xml:"code,attr"`
+	// The message associated with the error.
 	Message string `xml:"msg,attr"`
 }
 
+// Return a Flickr API error as a string containing both the error code and message.
 func (e *Error) Error() string {
 	return fmt.Sprintf("%d %s", e.Code, e.Message)
 }
 
+// Response is a struct containing only minimal information about an API request, notably it's Status and optionally an Error associated with the request.
 type Response struct {
 	XMLName xml.Name `xml:"rsp"`
-	Status  string   `xml:"stat,attr"`
-	Error   *Error   `xml:err,omitempty"`
+	// A string label indicating whether or not an API request succeeded or failed, "ok" and "error" respectively.
+	Status string `xml:"stat,attr"`
+	// An optional Error instance containing specific details about a failed API request.
+	Error *Error `xml:err,omitempty"`
 }
 
+// Unmarshal a Flickr API response in to a Response struct.
 func UnmarshalResponse(fh io.Reader) (*Response, error) {
 
 	body, err := io.ReadAll(fh)
