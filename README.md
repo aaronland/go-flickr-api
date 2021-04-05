@@ -4,7 +4,7 @@ Go package for working with the Flickr API
 
 ## Important
 
-Work in progress. Uploads not supported yet. There may still be bugs. Complete documentation to follow.
+Work in progress. There may still be bugs. Complete documentation to follow.
 
 ## Example
 
@@ -102,13 +102,33 @@ type ExecuteMethodPaginatedCallback func(context.Context, io.ReadSeekCloser, err
 
 ## Tools
 
+This package comes with a series of opinionated applications to implement functionality exposed by the Flickr API.
+
 ```
-$> make cli
+> make cli
 go build -mod vendor -o bin/api cmd/api/main.go
-go build -mod vendor -o bin/authorize cmd/authorize/main.go
+go build -mod vendor -o bin/upload cmd/upload/main.go
+go build -mod vendor -o bin/replace cmd/replace/main.go
+go build -mod vendor -o bin/auth-cli cmd/auth-cli/main.go
+go build -mod vendor -o bin/auth-www cmd/auth-www/main.go
 ```
 
 ### api
+
+```
+$> ./bin/api -h
+Usage of ./bin/api:
+  -client-uri string
+    	A valid aaronland/go-flickr-api client URI.
+  -paginated
+    	Automatically paginate (and iterate through) all API responses.
+  -param value
+    	Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.
+  -use-runtimevar
+    	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+```
+
+For example:
 
 ```
 $> ./bin/api \
@@ -129,10 +149,25 @@ $> ./bin/api \
 }
 ```
 
-## authorize
+### auth-cli
 
 ```
-$> ./bin/authorize \
+> ./bin/auth-cli -h
+Usage of ./bin/auth-cli:
+  -client-uri string
+    	A valid aaronland/go-flickr-api client URI.
+  -permissions string
+    	A valid Flickr API permissions flag.
+  -server-uri string
+    	A valid aaronland/go-http-server URI.
+  -use-runtimevar
+    	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+```
+
+For example:
+
+```
+$> ./bin/auth-cli \
 	-server-uri 'mkcert://localhost:8080' \
 	-client-uri 'oauth1://?consumer_key={KEY}&consumer_secret={SECRET}'
 	
@@ -143,9 +178,54 @@ $> ./bin/authorize \
 {"oauth_token":"{TOKEN}","oauth_token_secret":"{SECRET}"}
 ```
 
+### auth-www
+
+```
+$> ./bin/auth-www -h
+Usage of ./bin/auth-www:
+  -client-uri string
+    	A valid aaronland/go-flickr-api client URI.
+  -collection-uri string
+    	A valid gocloud.dev/docstore URI. The docstore is used to store token requests during the time a user is approving an authentication request.
+  -permissions string
+    	A valid Flickr API permissions flag.
+  -server-uri string
+    	A valid aaronland/go-http-server URI.
+  -use-runtimevar
+    	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+```
+
+### upload
+
+```
+$> ./bin/upload -h
+Usage of ./bin/upload:
+  -client-uri string
+    	A valid aaronland/go-flickr-api client URI.
+  -param value
+    	Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.
+  -use-runtimevar
+    	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+```
+
+### replace
+
+```
+$> ./bin/replace -h
+Usage of ./bin/replace:
+  -client-uri string
+    	A valid aaronland/go-flickr-api client URI.
+  -param value
+    	Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.
+  -use-runtimevar
+    	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+```
+
 ## See also
 
 * https://www.flickr.com/services/api/
 * https://www.flickr.com/services/api/auth.oauth.html
 * https://github.com/aaronland/go-http-server
 * https://gocloud.dev/howto/docstore/
+* https://gocloud.dev/howto/runtimevar/
+* https://gocloud.dev/howto/blob/
