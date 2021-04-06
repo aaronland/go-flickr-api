@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/aaronland/go-flickr-api/application"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/http/oauth1"
 	"github.com/aaronland/go-http-server"
@@ -16,15 +17,19 @@ import (
 	"os"
 )
 
-var collection_uri string
-
 var client_uri string
 var server_uri string
+var collection_uri string
 var perms string
 var use_runtimevar bool
 
-type AuthApplication struct{}
+// AuthApplication implements the application.Application interface as a commandline application to
+// ...
+type AuthApplication struct {
+	application.Application
+}
 
+// Return the default FlagSet necessary for the AuthApplication to run.
 func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 
 	fs := flagset.NewFlagSet("auth")
@@ -43,19 +48,21 @@ func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 	return fs
 }
 
-func (app *AuthApplication) Run(ctx context.Context) error {
+// Invoke the AuthApplication with its default FlagSet.
+func (app *AuthApplication) Run(ctx context.Context) (interface{}, error) {
 	fs := app.DefaultFlagSet()
 	return app.RunWithFlagSet(ctx, fs)
 }
 
-func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) error {
+// Invoke the AuthApplication with a custom FlagSet.
+func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (interface{}, error) {
 
 	flagset.Parse(fs)
 
 	err := flagset.SetFlagsFromEnvVars(fs, "FLICKR")
 
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("Failed to set flags from environment variables, %v", err)
 	}
 
 	if use_runtimevar {
@@ -63,7 +70,7 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 		runtime_uri, err := runtimevar.StringVar(ctx, client_uri)
 
 		if err != nil {
-			return fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
+			return nil, fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
 		}
 
 		client_uri = runtime_uri
@@ -71,7 +78,7 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 		runtime_uri, err = runtimevar.StringVar(ctx, server_uri)
 
 		if err != nil {
-			return fmt.Errorf("Failed to derive runtime value for server URI, %v", err)
+			return nil, fmt.Errorf("Failed to derive runtime value for server URI, %v", err)
 		}
 
 		server_uri = runtime_uri
@@ -79,7 +86,7 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 		runtime_uri, err = runtimevar.StringVar(ctx, collection_uri)
 
 		if err != nil {
-			return fmt.Errorf("Failed to derive runtime value for collection URI, %v", err)
+			return nil, fmt.Errorf("Failed to derive runtime value for collection URI, %v", err)
 		}
 
 		collection_uri = runtime_uri
@@ -91,19 +98,19 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 	cl, err := client.NewClient(ctx, client_uri)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create client, %v", err)
+		return nil, fmt.Errorf("Failed to create client, %v", err)
 	}
 
 	col, err := docstore.OpenCollection(ctx, collection_uri)
 
 	if err != nil {
-		return fmt.Errorf("Failed to open collection, %v", err)
+		return nil, fmt.Errorf("Failed to open collection, %v", err)
 	}
 
 	svr, err := server.NewServer(ctx, server_uri)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create new server, %v", err)
+		return nil, fmt.Errorf("Failed to create new server, %v", err)
 	}
 
 	req_uri := "/"
@@ -124,7 +131,7 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 	request_handler, err := oauth1.NewRequestTokenHandler(request_opts)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create request handler, %v", err)
+		return nil, fmt.Errorf("Failed to create request handler, %v", err)
 	}
 
 	auth_opts := &oauth1.AuthorizationTokenHandlerOptions{
@@ -135,7 +142,7 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 	auth_handler, err := oauth1.NewAuthorizationTokenHandler(auth_opts)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create authorization handler, %v", err)
+		return nil, fmt.Errorf("Failed to create authorization handler, %v", err)
 	}
 
 	mux := http.NewServeMux()
@@ -146,8 +153,8 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 	err = svr.ListenAndServe(ctx, mux)
 
 	if err != nil {
-		return fmt.Errorf("Failed to start server, %v", err)
+		return nil, fmt.Errorf("Failed to start server, %v", err)
 	}
 
-	return nil
+	return nil, nil
 }

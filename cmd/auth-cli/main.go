@@ -13,7 +13,7 @@ func main() {
 	ctx := context.Background()
 
 	app := &cli.AuthApplication{}
-	err := app.Run(ctx)
+	_, err := app.Run(ctx)
 
 	if err != nil {
 		log.Fatalf("Failed to run auth application, %v", err)

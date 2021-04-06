@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/aaronland/go-flickr-api/application"
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/http/oauth1"
@@ -22,8 +23,13 @@ var server_uri string
 var perms string
 var use_runtimevar bool
 
-type AuthApplication struct{}
+// AuthApplication implements the application.Application interface as a commandline application to
+// ...
+type AuthApplication struct {
+	application.Application
+}
 
+// Return the default FlagSet necessary for the AuthApplication to run.
 func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 
 	fs := flagset.NewFlagSet("auth")
@@ -41,19 +47,21 @@ func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 	return fs
 }
 
-func (app *AuthApplication) Run(ctx context.Context) error {
+// Invoke the AuthApplication with its default FlagSet.
+func (app *AuthApplication) Run(ctx context.Context) (interface{}, error) {
 	fs := app.DefaultFlagSet()
 	return app.RunWithFlagSet(ctx, fs)
 }
 
-func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) error {
+// Invoke the AuthApplication with a custom FlagSet.
+func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (interface{}, error) {
 
 	flagset.Parse(fs)
 
 	err := flagset.SetFlagsFromEnvVars(fs, "FLICKR")
 
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("Failed to set flags from environment variables, %v", err)
 	}
 
 	if use_runtimevar {
@@ -61,7 +69,7 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 		runtime_uri, err := runtimevar.StringVar(ctx, client_uri)
 
 		if err != nil {
-			return fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
+			return nil, fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
 		}
 
 		client_uri = runtime_uri
@@ -69,7 +77,7 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 		runtime_uri, err = runtimevar.StringVar(ctx, server_uri)
 
 		if err != nil {
-			return fmt.Errorf("Failed to derive runtime value for server URI, %v", err)
+			return nil, fmt.Errorf("Failed to derive runtime value for server URI, %v", err)
 		}
 
 		server_uri = runtime_uri
@@ -82,7 +90,7 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 	svr, err := server.NewServer(ctx, server_uri)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create new server, %v", err)
+		return nil, fmt.Errorf("Failed to create new server, %v", err)
 	}
 
 	token_ch := make(chan auth.AuthorizationToken)
@@ -91,7 +99,7 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 	auth_handler, err := oauth1.NewAuthorizationTokenHandlerWithChannels(token_ch, err_ch)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create request handler, %v", err)
+		return nil, fmt.Errorf("Failed to create request handler, %v", err)
 	}
 
 	mux := http.NewServeMux()
@@ -110,19 +118,19 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 	cl, err := client.NewClient(ctx, client_uri)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create client, %v", err)
+		return nil, fmt.Errorf("Failed to create client, %v", err)
 	}
 
 	req_token, err := cl.GetRequestToken(ctx, svr.Address())
 
 	if err != nil {
-		return fmt.Errorf("Failed to create request token, %v", err)
+		return nil, fmt.Errorf("Failed to create request token, %v", err)
 	}
 
 	auth_url, err := cl.GetAuthorizationURL(ctx, req_token, perms)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create authorization URL, %v", err)
+		return nil, fmt.Errorf("Failed to create authorization URL, %v", err)
 	}
 
 	log.Printf("Authorize this application %s\n", auth_url)
@@ -134,7 +142,7 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 	for {
 		select {
 		case err := <-err_ch:
-			return fmt.Errorf("Failed to authorize request, %v", err)
+			return nil, fmt.Errorf("Failed to authorize request, %v", err)
 		case t := <-token_ch:
 			auth_token = t
 		default:
@@ -149,13 +157,13 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 	access_token, err := cl.GetAccessToken(ctx, req_token, auth_token)
 
 	if err != nil {
-		return fmt.Errorf("Failed to get access token, %v", err)
+		return nil, fmt.Errorf("Failed to get access token, %v", err)
 	}
 
 	cl, err = cl.WithAccessToken(ctx, access_token)
 
 	if err != nil {
-		return fmt.Errorf("Failed to assign client with access token, %v", err)
+		return nil, fmt.Errorf("Failed to assign client with access token, %v", err)
 	}
 
 	args := &url.Values{}
@@ -164,15 +172,15 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 	_, err = cl.ExecuteMethod(ctx, args)
 
 	if err != nil {
-		return fmt.Errorf("Failed to test login, %v", err)
+		return nil, fmt.Errorf("Failed to test login, %v", err)
 	}
 
 	enc := json.NewEncoder(os.Stdout)
 	err = enc.Encode(access_token)
 
 	if err != nil {
-		return fmt.Errorf("Failed to write access token, %v", err)
+		return nil, fmt.Errorf("Failed to write access token, %v", err)
 	}
 
-	return nil
+	return nil, nil
 }
