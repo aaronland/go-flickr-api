@@ -26,8 +26,13 @@ type Client interface {
 	Replace(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
 }
 
+// ExecuteMethodPaginatedCallback is the interface for callback functions passed to the
+// ExecuteMethodPaginatedWithClient method.
 type ExecuteMethodPaginatedCallback func(context.Context, io.ReadSeekCloser, error) error
 
+// ExecuteMethodPaginatedWithClient invokes the Flickr API using a Client instance and then continues
+// to invoke that method as many times as necessary to paginate through all of the results. Each result
+// is passed to the ExecuteMethodPaginatedCallback for processing.
 func ExecuteMethodPaginatedWithClient(ctx context.Context, cl Client, args *url.Values, cb ExecuteMethodPaginatedCallback) error {
 
 	page := 1
@@ -48,6 +53,13 @@ func ExecuteMethodPaginatedWithClient(ctx context.Context, cl Client, args *url.
 
 	for {
 
+		select {
+		case <- ctx.Done():
+			return nil
+		default:
+			// pass
+		}
+		
 		fh, err := cl.ExecuteMethod(ctx, args)
 
 		err = cb(ctx, fh, err)
@@ -85,6 +97,9 @@ func ExecuteMethodPaginatedWithClient(ctx context.Context, cl Client, args *url.
 	return nil
 }
 
+// UploadAsyncWithClient invokes the Flickr API using a Client instance to upload an image asynchronously
+// and then waits, invoking the CheckTicketWithClient method at regular intervals, until the upload is
+// complete.
 func UploadAsyncWithClient(ctx context.Context, cl Client, fh io.Reader, args *url.Values) (int64, error) {
 
 	args.Set("async", "1")
@@ -98,6 +113,9 @@ func UploadAsyncWithClient(ctx context.Context, cl Client, fh io.Reader, args *u
 	return checkAsyncResponseWithClient(ctx, cl, rsp)
 }
 
+// ReplaceAsyncWithClient invokes the Flickr API using a Client instance to replace an image asynchronously
+// and then waits, invoking the CheckTicketWithClient method at regular intervals, until the replacement is
+// complete.
 func ReplaceAsyncWithClient(ctx context.Context, cl Client, fh io.Reader, args *url.Values) (int64, error) {
 
 	args.Set("async", "1")
@@ -130,6 +148,9 @@ func checkAsyncResponseWithClient(ctx context.Context, cl Client, rsp_fh io.Read
 	return CheckTicketWithClient(ctx, cl, ticket)
 }
 
+// CheckTicketWithClient calls with Flickr API with Client and reponse.UploadTicket at regular intervals
+// (every 2 seconds) to check the status of an upload ticket. If successful it will return the photo ID
+// assigned to the upload.
 func CheckTicketWithClient(ctx context.Context, cl Client, ticket *response.UploadTicket) (int64, error) {
 
 	ticker := time.NewTicker(2 * time.Second)

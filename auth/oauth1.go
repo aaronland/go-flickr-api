@@ -18,10 +18,12 @@ type OAuth1RequestToken struct {
 	OAuthTokenSecret string `json:"oauth_token_secret"`
 }
 
+// Return a Flickr API OAuth1 token associated with a authorization request.
 func (t *OAuth1RequestToken) Token() string {
 	return t.OAuthToken
 }
 
+// Return a Flickr API OAuth1 secret associated with a authorization request.
 func (t *OAuth1RequestToken) Secret() string {
 	return t.OAuthTokenSecret
 }
@@ -33,10 +35,12 @@ type OAuth1AuthorizationToken struct {
 	OAuthVerifier      string `json:"oath_verifier"`
 }
 
+// Return a Flickr API OAuth1 token associated with a authorization response.
 func (t *OAuth1AuthorizationToken) Token() string {
 	return t.OAuthToken
 }
 
+// Return a Flickr API OAuth1 verification string associated with a authorization response.
 func (t *OAuth1AuthorizationToken) Verifier() string {
 	return t.OAuthVerifier
 }
@@ -48,10 +52,12 @@ type OAuth1AccessToken struct {
 	OAuthTokenSecret string `json:"oauth_token_secret"`
 }
 
+// Return a Flickr API OAuth1 token associated with an access token.
 func (t *OAuth1AccessToken) Token() string {
 	return t.OAuthToken
 }
 
+// Return a Flickr API OAuth1 secret associated with an access token.
 func (t *OAuth1AccessToken) Secret() string {
 	return t.OAuthTokenSecret
 }

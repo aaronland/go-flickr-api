@@ -27,6 +27,8 @@ func init() {
 	}
 }
 
+// OAuth1Client implements the Client interface for invoking the Flickr API using the OAuth1 authentication
+// and authorization mechanism.
 type OAuth1Client struct {
 	http_client        *http.Client
 	api_endpoint       *url.URL
