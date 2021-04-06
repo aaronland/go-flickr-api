@@ -4,12 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/aaronland/go-flickr-api/application"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/sfomuseum/go-flags/flagset"
 	"github.com/sfomuseum/go-flags/multi"
 	"github.com/sfomuseum/runtimevar"
 	"io"
-	"log"
+	_ "log"
 	"net/url"
 	"os"
 )
@@ -19,8 +20,13 @@ var client_uri string
 var use_runtimevar bool
 var paginated bool
 
-type APIApplication struct{}
+// APIApplication implements the application.Application interface as a commandline application to invoke
+// the Flickr API and output results to STDOUT.
+type APIApplication struct {
+	application.Application
+}
 
+// Return the default FlagSet necessary for the APIApplication to run.
 func (app *APIApplication) DefaultFlagSet() *flag.FlagSet {
 
 	fs := flagset.NewFlagSet("upload")
@@ -38,19 +44,21 @@ func (app *APIApplication) DefaultFlagSet() *flag.FlagSet {
 	return fs
 }
 
-func (app *APIApplication) Run(ctx context.Context) error {
+// Invoke the APIApplication with its default FlagSet.
+func (app *APIApplication) Run(ctx context.Context) (interface{}, error) {
 	fs := app.DefaultFlagSet()
 	return app.RunWithFlagSet(ctx, fs)
 }
 
-func (app *APIApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) error {
+// Invoke the APIApplication with a custom FlagSet.
+func (app *APIApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (interface{}, error) {
 
 	flagset.Parse(fs)
 
 	err := flagset.SetFlagsFromEnvVars(fs, "FLICKR")
 
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("Failed to set flags from environment variables, %v", err)
 	}
 
 	if use_runtimevar {
@@ -58,7 +66,7 @@ func (app *APIApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet)
 		runtime_uri, err := runtimevar.StringVar(ctx, client_uri)
 
 		if err != nil {
-			return fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
+			return nil, fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
 		}
 
 		client_uri = runtime_uri
@@ -67,7 +75,7 @@ func (app *APIApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet)
 	cl, err := client.NewClient(ctx, client_uri)
 
 	if err != nil {
-		log.Fatalf("Failed to create client, %v", err)
+		return nil, fmt.Errorf("Failed to create client, %v", err)
 	}
 
 	args := &url.Values{}
@@ -96,7 +104,7 @@ func (app *APIApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet)
 		err := client.ExecuteMethodPaginatedWithClient(ctx, cl, args, cb)
 
 		if err != nil {
-			log.Fatalf("Failed to write method results, %v", err)
+			return nil, fmt.Errorf("Failed to write method results, %v", err)
 		}
 
 	} else {
@@ -106,9 +114,9 @@ func (app *APIApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet)
 		err = cb(ctx, fh, err)
 
 		if err != nil {
-			log.Fatalf("Failed to write method results, %v", err)
+			return nil, fmt.Errorf("Failed to write method results, %v", err)
 		}
 	}
 
-	return nil
+	return nil, nil
 }

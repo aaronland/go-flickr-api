@@ -13,7 +13,7 @@ func main() {
 	ctx := context.Background()
 
 	app := &api.APIApplication{}
-	err := app.Run(ctx)
+	_, err := app.Run(ctx)
 
 	if err != nil {
 		log.Fatalf("Failed to run upload application, %v", err)
