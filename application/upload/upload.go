@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/aaronland/go-flickr-api/application"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/reader"
 	"github.com/sfomuseum/go-flags/flagset"
@@ -25,8 +26,13 @@ type UploadResult struct {
 	Error   error  `json:"error,omitempty"`
 }
 
-type UploadApplication struct{}
+// UploadApplication implements the application.Application interface as a commandline application for
+// uploading photos using the Flickr API
+type UploadApplication struct {
+	application.Application
+}
 
+// Return the default FlagSet necessary for the UploadApplication to run.
 func (app *UploadApplication) DefaultFlagSet() *flag.FlagSet {
 
 	fs := flagset.NewFlagSet("upload")
@@ -43,19 +49,21 @@ func (app *UploadApplication) DefaultFlagSet() *flag.FlagSet {
 	return fs
 }
 
-func (app *UploadApplication) Run(ctx context.Context) error {
+// Invoke the UploadApplication with its default FlagSet.
+func (app *UploadApplication) Run(ctx context.Context) (interface{}, error) {
 	fs := app.DefaultFlagSet()
 	return app.RunWithFlagSet(ctx, fs)
 }
 
-func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) error {
+// Invoke the UploadApplication with a custom FlagSet.
+func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (interface{}, error) {
 
 	flagset.Parse(fs)
 
 	err := flagset.SetFlagsFromEnvVars(fs, "FLICKR")
 
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("Failed to set flags from environment variables, %v", err)
 	}
 
 	paths := fs.Args()
@@ -65,7 +73,7 @@ func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagS
 		runtime_uri, err := runtimevar.StringVar(ctx, client_uri)
 
 		if err != nil {
-			return fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
+			return nil, fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
 		}
 
 		client_uri = runtime_uri
@@ -74,7 +82,7 @@ func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagS
 	cl, err := client.NewClient(ctx, client_uri)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create client, %v", err)
+		return nil, fmt.Errorf("Failed to create client, %v", err)
 	}
 
 	args := &url.Values{}
@@ -143,5 +151,5 @@ func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagS
 		log.Fatalf("Failed to encode results, %v", err)
 	}
 
-	return nil
+	return nil, nil
 }

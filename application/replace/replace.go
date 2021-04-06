@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/aaronland/go-flickr-api/application"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/reader"
 	"github.com/aaronland/go-flickr-api/response"
@@ -21,8 +22,13 @@ var params multi.KeyValueString
 var client_uri string
 var use_runtimevar bool
 
-type ReplaceApplication struct{}
+// ReplaceApplication implements the application.Application interface as a commandline application for
+// replacing photos using the Flickr API
+type ReplaceApplication struct {
+	application.Application
+}
 
+// Return the default FlagSet necessary for the ReplaceApplication to run.
 func (app *ReplaceApplication) DefaultFlagSet() *flag.FlagSet {
 
 	fs := flagset.NewFlagSet("upload")
@@ -39,19 +45,21 @@ func (app *ReplaceApplication) DefaultFlagSet() *flag.FlagSet {
 	return fs
 }
 
-func (app *ReplaceApplication) Run(ctx context.Context) error {
+// Invoke the ReplaceApplication with its default FlagSet.
+func (app *ReplaceApplication) Run(ctx context.Context) (interface{}, error) {
 	fs := app.DefaultFlagSet()
 	return app.RunWithFlagSet(ctx, fs)
 }
 
-func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) error {
+// Invoke the ReplaceApplication with a custom FlagSet.
+func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (interface{}, error) {
 
 	flagset.Parse(fs)
 
 	err := flagset.SetFlagsFromEnvVars(fs, "FLICKR")
 
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("Failed to set flags from environment variables, %v", err)
 	}
 
 	paths := fs.Args()
@@ -61,7 +69,7 @@ func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.Flag
 		runtime_uri, err := runtimevar.StringVar(ctx, client_uri)
 
 		if err != nil {
-			return fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
+			return nil, fmt.Errorf("Failed to derive runtime value for client URI, %v", err)
 		}
 
 		client_uri = runtime_uri
@@ -70,7 +78,7 @@ func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.Flag
 	cl, err := client.NewClient(ctx, client_uri)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create client, %v", err)
+		return nil, fmt.Errorf("Failed to create client, %v", err)
 	}
 
 	args := &url.Values{}
@@ -86,7 +94,7 @@ func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.Flag
 		fh, err := reader.NewReader(ctx, path)
 
 		if err != nil {
-			return fmt.Errorf("Failed to create reader for '%s', %v", path, err)
+			return nil, fmt.Errorf("Failed to create reader for '%s', %v", path, err)
 		}
 
 		defer fh.Close()
@@ -100,11 +108,11 @@ func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.Flag
 		up, err := response.UnmarshalUploadResponse(rsp)
 
 		if err != nil {
-			return fmt.Errorf("Failed to unmarshal upload response, %v", err)
+			return nil, fmt.Errorf("Failed to unmarshal upload response, %v", err)
 		}
 
 		if up.Error != nil {
-			return fmt.Errorf("Upload failed, %v", up.Error)
+			return nil, fmt.Errorf("Upload failed, %v", up.Error)
 		}
 
 		log.Println(up, up.Error)
@@ -113,5 +121,5 @@ func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.Flag
 		io.Copy(os.Stdout, rsp)
 	}
 
-	return nil
+	return nil, nil
 }

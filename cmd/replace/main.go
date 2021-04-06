@@ -13,7 +13,7 @@ func main() {
 	ctx := context.Background()
 
 	app := &replace.ReplaceApplication{}
-	err := app.Run(ctx)
+	_, err := app.Run(ctx)
 
 	if err != nil {
 		log.Fatalf("Failed to run replace application, %v", err)

@@ -21,7 +21,7 @@ var use_runtimevar bool
 var paginated bool
 
 // APIApplication implements the application.Application interface as a commandline application to invoke
-// the Flickr API and output results to STDOUT.
+// the Flickr API and output results to STDOUT. It does not support uploading or replacing photos.
 type APIApplication struct {
 	application.Application
 }
