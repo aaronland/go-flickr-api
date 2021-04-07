@@ -38,6 +38,7 @@ func (app *ReplaceApplication) DefaultFlagSet() *flag.FlagSet {
 	fs.Var(&params, "param", "Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.")
 
 	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Command-line tool for replacing an image in Flickr.\n\n")
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fs.PrintDefaults()
 	}

@@ -66,6 +66,8 @@ go build -mod vendor -o bin/auth-www cmd/auth-www/main.go
 
 ### api
 
+Command-line tool for invoking the Flickr API. Results are emitted to STDOUT. Uploading and replacing images are not supported by this tool.
+
 ```
 $> ./bin/api -h
 Usage of ./bin/api:
@@ -102,6 +104,8 @@ $> ./bin/api \
 
 ### auth-cli
 
+Command-line tool for initiating a Flickr API authorization flow.
+
 ```
 > ./bin/auth-cli -h
 Usage of ./bin/auth-cli:
@@ -131,6 +135,8 @@ $> ./bin/auth-cli \
 
 ### auth-www
 
+HTTP server for initiating a Flickr API autorization flow in a web browser.
+
 ```
 $> ./bin/auth-www -h
 Usage of ./bin/auth-www:
@@ -148,6 +154,8 @@ Usage of ./bin/auth-www:
 
 ### upload
 
+Command-line tool for uploading an image to Flickr.
+
 ```
 $> ./bin/upload -h
 Usage of ./bin/upload:
@@ -160,6 +168,8 @@ Usage of ./bin/upload:
 ```
 
 ### replace
+
+Command-line tool for replacing an image in Flickr.
 
 ```
 $> ./bin/replace -h

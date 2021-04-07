@@ -24,7 +24,9 @@ var perms string
 var use_runtimevar bool
 
 // AuthApplication implements the application.Application interface as a commandline application to
-// ...
+// initiate a Flickr API authorization flow. This application will launch a background HTTP process
+// to receive authorization callback requests (from Flickr) and block execution, using channels, until
+// an authorization request is approved or triggers and error.
 type AuthApplication struct {
 	application.Application
 }
@@ -40,6 +42,7 @@ func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 	fs.StringVar(&perms, "permissions", "", "A valid Flickr API permissions flag.")
 
 	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Command-line tool for initiating a Flickr API authorization flow.\n\n")
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fs.PrintDefaults()
 	}
