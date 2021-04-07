@@ -11,18 +11,33 @@ import (
 	"time"
 )
 
+// The default Flickr API endpoint.
 const API_ENDPOINT string = "https://api.flickr.com/services/rest"
+
+// The default Flickr API endpoint for uploading images.
 const UPLOAD_ENDPOINT string = "https://up.flickr.com/services/upload/"
+
+// The default Flickr API endpoint for replacing images.
 const REPLACE_ENDPOINT string = "https://up.flickr.com/services/replace/"
 
-// Client is the interface that defines common methods for all Flickr API Client.
+// Client is the interface that defines common methods for all Flickr API Client implementations.
+// Currently there is only a single implementation that calls the Flickr API using the OAuth1
+// authentication and authorization scheme but it is assumed that eventually there will be at least
+// one other when OAuth1 is superseded.
 type Client interface {
+	// Return a new Client instance that uses the credentials included in the auth.AccessToken instance.
 	WithAccessToken(context.Context, auth.AccessToken) (Client, error)
+	// Call the Flickr API and create a new request token as part of the token authorization flow.
 	GetRequestToken(context.Context, string) (auth.RequestToken, error)
+	// Generate the URL using a request token and permissions string used to redirect a user to in order to authorize a token request.
 	GetAuthorizationURL(context.Context, auth.RequestToken, string) (string, error)
+	// Call the Flickr API to exchange a request and authorization token for a permanent access token.
 	GetAccessToken(context.Context, auth.RequestToken, auth.AuthorizationToken) (auth.AccessToken, error)
+	// Execute a Flickr API method.
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
+	// Upload an image using the Flickr API.
 	Upload(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
+	// Replace an image using the Flickr API.
 	Replace(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
 }
 

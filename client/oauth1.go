@@ -13,8 +13,13 @@ import (
 	"time"
 )
 
+// The default Flickr endpoint for OAuth1 authorization requests.
 const OAUTH1_AUTHORIZE_ENDPOINT string = "https://www.flickr.com/services/oauth/authorize"
+
+// The default Flickr endpoint for OAuth1 request token requests.
 const OAUTH1_REQUEST_TOKEN_ENDPOINT string = "https://www.flickr.com/services/oauth/request_token"
+
+// The default Flickr endpoint for OAuth1 access token requests.
 const OAUTH1_ACCESS_TOKEN_ENDPOINT string = "https://www.flickr.com/services/oauth/access_token"
 
 func init() {
@@ -38,6 +43,10 @@ type OAuth1Client struct {
 	oauth_token_secret string
 }
 
+// Create a new OAuth1Client instance conforming to the Client interface. OAuth1Client instances are
+// create by passing in a context.Context instance and a URI string in the form of:
+// oauth1://?consumer_key={KEY}&consumer_secret={SECRET} or:
+// oauth1://?consumer_key={KEY}&consumer_secret={SECRET}&oauth1_token={TOKEN}&oauth1_token_secret={SECRET}
 func NewOAuth1Client(ctx context.Context, uri string) (Client, error) {
 
 	u, err := url.Parse(uri)
@@ -81,6 +90,7 @@ func NewOAuth1Client(ctx context.Context, uri string) (Client, error) {
 	return cl, nil
 }
 
+// Return a new Client instance that uses the credentials included in the auth.AccessToken instance.
 func (cl *OAuth1Client) WithAccessToken(ctx context.Context, access_token auth.AccessToken) (Client, error) {
 
 	new_cl := &OAuth1Client{
@@ -94,6 +104,7 @@ func (cl *OAuth1Client) WithAccessToken(ctx context.Context, access_token auth.A
 	return new_cl, nil
 }
 
+// Call the Flickr API and create a new request token as part of the token authorization flow.
 func (cl *OAuth1Client) GetRequestToken(ctx context.Context, cb_url string) (auth.RequestToken, error) {
 
 	endpoint, err := url.Parse(OAUTH1_REQUEST_TOKEN_ENDPOINT)
@@ -138,6 +149,7 @@ func (cl *OAuth1Client) GetRequestToken(ctx context.Context, cb_url string) (aut
 	return auth.UnmarshalOAuth1RequestToken(string(rsp_body))
 }
 
+// Generate the URL using a request token and permissions string used to redirect a user to in order to authorize a token request.
 func (cl *OAuth1Client) GetAuthorizationURL(ctx context.Context, req auth.RequestToken, perms string) (string, error) {
 
 	q := url.Values{}
@@ -158,6 +170,7 @@ func (cl *OAuth1Client) GetAuthorizationURL(ctx context.Context, req auth.Reques
 	return endpoint.String(), nil
 }
 
+// Call the Flickr API to exchange a request and authorization token for a permanent access token.
 func (cl *OAuth1Client) GetAccessToken(ctx context.Context, req_token auth.RequestToken, auth_token auth.AuthorizationToken) (auth.AccessToken, error) {
 
 	endpoint, err := url.Parse(OAUTH1_ACCESS_TOKEN_ENDPOINT)
@@ -208,6 +221,7 @@ func (cl *OAuth1Client) GetAccessToken(ctx context.Context, req_token auth.Reque
 	return auth.UnmarshalOAuth1AccessToken(string(rsp_body))
 }
 
+// Execute a Flickr API method.
 func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadSeekCloser, error) {
 
 	endpoint, err := url.Parse(API_ENDPOINT)
@@ -244,6 +258,7 @@ func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io
 	return cl.call(ctx, req)
 }
 
+// Upload an image using the Flickr API.
 func (cl *OAuth1Client) Upload(ctx context.Context, fh io.Reader, args *url.Values) (io.ReadSeekCloser, error) {
 
 	endpoint, err := url.Parse(UPLOAD_ENDPOINT)
@@ -253,56 +268,9 @@ func (cl *OAuth1Client) Upload(ctx context.Context, fh io.Reader, args *url.Valu
 	}
 
 	return cl.upload(ctx, endpoint, fh, args)
-
-	/*
-		http_method := "POST"
-
-		args.Set("oauth_token", cl.oauth_token)
-
-		args, err = cl.signArgs(http_method, endpoint, args, cl.oauth_token_secret)
-
-		if err != nil {
-			return nil, err
-		}
-
-		fname := "upload"
-		boundary, err := randomBoundary()
-
-		if err != nil {
-			return nil, err
-		}
-
-		r, w := io.Pipe()
-
-		ctx, cancel := context.WithCancel(ctx)
-		defer cancel()
-
-		go func() {
-
-			err := streamUploadBody(ctx, w, fname, boundary, fh, args)
-
-			if err != nil {
-				log.Printf("Failed to stream upload body for '%s', %v", name, err)
-				cancel()
-			}
-		}()
-
-		req, err := http.NewRequest(http_method, endpoint.String(), r)
-
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("content-type", "multipart/form-data; boundary="+boundary)
-		req.ContentLength = -1 // unknown
-
-		// This response is formatted in the REST API response style.
-		// https://www.flickr.com/services/api/response.rest.html
-
-		return cl.call(ctx, req)
-	*/
 }
 
+// Replace an image using the Flickr API.
 func (cl *OAuth1Client) Replace(ctx context.Context, fh io.Reader, args *url.Values) (io.ReadSeekCloser, error) {
 
 	endpoint, err := url.Parse(REPLACE_ENDPOINT)
