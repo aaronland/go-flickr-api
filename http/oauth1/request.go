@@ -5,16 +5,23 @@ import (
 	"gocloud.dev/docstore"
 	_ "log"
 	gohttp "net/http"
-	_ "net/url"
 )
 
+// RequestTokenHandlerOptions is a struct containing application-specific details
+// necessary for all OAuth1 authorization flow requests.
 type RequestTokenHandlerOptions struct {
+	// A client.Client instance used to call the Flickr API	
 	Client       client.Client
+	// A gocloud.dev/docstore.Collection instance used to store request token details necessary for creating permanent access tokens.	
 	Collection   *docstore.Collection
+	// The Flickr API permissions that your application is requesting.
 	Permissions  string
+	// The fully qualified callback URL to be invoked by Flickr if an autorization request is approved.
 	AuthCallback string
 }
 
+// Return a new HTTP handler to create a new OAuth1 authorization request token and then redirect to the
+// Flickr API OAuth1 authorization approval endpoint.
 func NewRequestTokenHandler(opts *RequestTokenHandlerOptions) (gohttp.Handler, error) {
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {

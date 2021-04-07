@@ -13,8 +13,7 @@ import (
 // Most of the code in this file has been copypasted with minor
 // updates from https://github.com/masci/flickr/blob/v2/upload.go
 
-// generate a random multipart boundary string,
-// shamelessly copypasted from the std library
+// Generate a random multipart boundary string, shamelessly copypasted from the std library
 func randomBoundary() (string, error) {
 
 	var buf [30]byte

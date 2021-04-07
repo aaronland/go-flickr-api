@@ -6,6 +6,11 @@ import (
 	gohttp "net/http"
 )
 
+// Return a new HTTP handler to receive a process OAuth1 authorization callback requests. This handler will
+// relay the OAuth1 authorization token or any errors received by the callback to the appropriate channel.
+// This handler is used to create a background HTTP server process that can block execution of a command-line
+// OAuth1 authorization "www" flow until either a token or an error is dispatched to its corresponding channel
+// in the application code.
 func NewAuthorizationTokenHandlerWithChannels(token_ch chan auth.AuthorizationToken, err_ch chan error) (gohttp.Handler, error) {
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {

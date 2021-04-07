@@ -5,21 +5,34 @@ import (
 	"io"
 )
 
+// CheckTicket is a struct that maps to the Flickr API flickr.photos.upload.checkTickets
+// method response.
 type CheckTicket struct {
+	// An Uploader instance that maps to the "uploader" element in the API response.
 	Uploader *Uploader `json:"uploader"`
 }
 
+// Uploader is a struct that maps to the "uploader" element in a Flickr API
+// flickr.photos.upload.checkTickets method response.
 type Uploader struct {
+	// An array of UploaderTicket instances that map to the "ticket" array in the API response.
 	Tickets []*UploaderTicket `json:"ticket"`
 }
 
+// UploaderTicket is a struct that maps to the "ticket" array in a Flickr API
+// flickr.photos.upload.checkTickets method response.
 type UploaderTicket struct {
+	// A Flickr API upload ticket ID.
 	TicketId string `json:"id"`
-	Complete int    `json:"complete"`
-	PhotoId  string `json:"photoid"`
+	// A numeric flag (1 or 0) indicating whether an upload ticket has been completed.
+	Complete int `json:"complete"`
+	// The Flickr photo ID for a successful upload. Note that this is encoded (by the Flickr API) a string.
+	PhotoId string `json:"photoid"`
+	// The creation time (Unix timestamp) for a successful upload. Note that this is encoded (by the Flickr API) a string.
 	Imported string `json:"imported"`
 }
 
+// Unmarshal Flickr API flickr.photos.upload.checkTickets method response into a CheckTicket instance.
 func UnmarshalCheckTicketResponse(fh io.Reader) (*CheckTicket, error) {
 
 	var ct *CheckTicket

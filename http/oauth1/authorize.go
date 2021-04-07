@@ -13,11 +13,18 @@ import (
 	_ "os"
 )
 
+// AuthorizationTokenHandlerOptions is a struct containing application-specific details
+// necessary for all OAuth1 authorization callback requests.
 type AuthorizationTokenHandlerOptions struct {
+	// A client.Client instance used to call the Flickr API
 	Client     client.Client
+	// A gocloud.dev/docstore.Collection instance used to retrieve request token details necessary for creating permanent access tokens.
 	Collection *docstore.Collection
 }
 
+// Return a new HTTP handler to receive a process OAuth1 authorization callback requests. This handler will
+// retrieve the request token associated with the authorization request and exchange these elements for a permanent
+// OAuth1 access token.
 func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohttp.Handler, error) {
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {

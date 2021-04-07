@@ -1,3 +1,7 @@
+// package client provides interfaces for common methods for accessing the Flickr API.
+// Currently there is only a single client interface that calls the Flickr API using the OAuth1
+// authentication and authorization scheme but it is assumed that eventually there will be at least
+// one other when OAuth1 is superseded.
 package client
 
 import (
@@ -69,12 +73,12 @@ func ExecuteMethodPaginatedWithClient(ctx context.Context, cl Client, args *url.
 	for {
 
 		select {
-		case <- ctx.Done():
+		case <-ctx.Done():
 			return nil
 		default:
 			// pass
 		}
-		
+
 		fh, err := cl.ExecuteMethod(ctx, args)
 
 		err = cb(ctx, fh, err)

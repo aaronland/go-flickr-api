@@ -1,3 +1,7 @@
+// package response provides methods for unmarshaling Flickr API responses in to
+// structs and instances corresponding to specific API methods. Not all Flickr API
+// responses are supported yet and may not be until time and circumstance warrant
+// their inclusion.
 package response
 
 import (
