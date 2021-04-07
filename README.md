@@ -1,7 +1,9 @@
-# go-flickr-api [![Go Reference](https://pkg.go.dev/badge/github.com/aaronland/go-flickr-api.svg)](https://pkg.go.dev/github.com/aaronland/go-flickr-api)
+# go-flickr-api
 
 Go package for working with the Flickr API
 
+ [![Go Reference](https://pkg.go.dev/badge/github.com/aaronland/go-flickr-api.svg)](https://pkg.go.dev/github.com/aaronland/go-flickr-api)
+ 
 ## Important
 
 This is nearly, but not quite, complete. Some things may still change and not all the documentation is finished.
