@@ -55,8 +55,10 @@ In time there may be, along with helper methods for unmarshaling API responses i
 
 This package comes with a series of opinionated applications to implement functionality exposed by the Flickr API. These easiest way to build them is to run the handy `cli` target in the Makefile that comes bundled with this package.
 
+_As of this writing the documentation and final output of all but the `api` tool is incomplete and subject to change still._
+
 ```
-> make cli
+$> make cli
 go build -mod vendor -o bin/api cmd/api/main.go
 go build -mod vendor -o bin/upload cmd/upload/main.go
 go build -mod vendor -o bin/replace cmd/replace/main.go
@@ -70,6 +72,8 @@ Command-line tool for invoking the Flickr API. Results are emitted to STDOUT. Up
 
 ```
 $> ./bin/api -h
+Command-line tool for invoking the Flickr API. Results are emitted to STDOUT. Uploading and replacing images are not supported by this tool.
+
 Usage of ./bin/api:
   -client-uri string
     	A valid aaronland/go-flickr-api client URI.
@@ -108,6 +112,8 @@ Command-line tool for initiating a Flickr API authorization flow.
 
 ```
 > ./bin/auth-cli -h
+Command-line tool for initiating a Flickr API authorization flow.
+
 Usage of ./bin/auth-cli:
   -client-uri string
     	A valid aaronland/go-flickr-api client URI.
@@ -159,6 +165,8 @@ Command-line tool for uploading an image to Flickr.
 ```
 $> ./bin/upload -h
 Usage of ./bin/upload:
+Command-line tool for uploading an image to Flickr.
+
   -client-uri string
     	A valid aaronland/go-flickr-api client URI.
   -param value
@@ -173,6 +181,8 @@ Command-line tool for replacing an image in Flickr.
 
 ```
 $> ./bin/replace -h
+Command-line tool for replacing an image in Flickr.
+
 Usage of ./bin/replace:
   -client-uri string
     	A valid aaronland/go-flickr-api client URI.
