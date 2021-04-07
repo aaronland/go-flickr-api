@@ -11,9 +11,9 @@ import (
 // approval phase of an OAuth1 authorization "www" flow.
 type RequestTokenCache struct {
 	// Flickr API OAuth1 request token.
-	Token   string
-	// Flickr API OAuth1 request token secret.	
-	Secret  string
+	Token string
+	// Flickr API OAuth1 request token secret.
+	Secret string
 	// Unix timestamp representing the time that the RequestTokenCache was created.
 	Created int64
 }

@@ -4,7 +4,7 @@ Go package for working with the Flickr API
 
 ## Important
 
-Work in progress. There may still be bugs. Complete documentation to follow.
+This is nearly, but not quite, complete. Some things may still change and not all the documentation is finished.
 
 ## Example
 
@@ -47,62 +47,13 @@ The core of this package's approach to the Flickr API is the `ExecuteMethod` met
 	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
 ```
 
-This package only defines a handful of Go types or structs mapping to individual API responses. So far these are all specific to operations relating to uploading or replacing photos.
+This package only defines [a handful of Go types or structs mapping to individual API responses](response). So far these are all specific to operations relating to uploading or replacing photos and to pagination.
 
 In time there may be, along with helper methods for unmarshaling API responses in to typed responses but the baseline for all operations will remain: Query (`url.Values`) parameters sent over HTTP returning an `io.ReadSeekCloser` instance that is inspected and validated according to the needs and uses of the tools using the Flickr API.
 
-## Interfaces
-
-### auth.RequestToken
-
-```
-type RequestToken interface {
-	Token() string
-	Secret() string
-}
-```
-
-### auth.AuthorizationToken
-
-```
-type AuthorizationToken interface {
-	Token() string
-	Verifier() string
-}
-```
-
-### auth.AccessToken
-
-```
-type AccessToken interface {
-	Token() string
-	Secret() string
-}
-```
-
-### client.Client
-
-```
-type Client interface {
-	WithAccessToken(context.Context, auth.AccessToken) (Client, error)	
-	GetRequestToken(context.Context, string) (auth.RequestToken, error)
-	GetAuthorizationURL(context.Context, auth.RequestToken, string) (string, error)
-	GetAccessToken(context.Context, auth.RequestToken, auth.AuthorizationToken) (auth.AccessToken, error)
-	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
-	Upload(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
-	Replace(context.Context, io.Reader, *url.Values) (io.ReadSeekCloser, error)
-}
-```
-
-### client.ExecuteMethodPaginatedCallback
-
-```
-type ExecuteMethodPaginatedCallback func(context.Context, io.ReadSeekCloser, error) error
-```
-
 ## Tools
 
-This package comes with a series of opinionated applications to implement functionality exposed by the Flickr API.
+This package comes with a series of opinionated applications to implement functionality exposed by the Flickr API. These easiest way to build them is to run the handy `cli` target in the Makefile that comes bundled with this package.
 
 ```
 > make cli
@@ -220,6 +171,81 @@ Usage of ./bin/replace:
   -use-runtimevar
     	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
 ```
+
+### Design
+
+The guts of all the tools bundled with this package are kept in the [application](application) directory rather than in application code itself. That's because the tools rely on the [GoCloud](https://gocloud.dev/) APIs for specific functionality. These are:
+
+* Reading sensitive configuration data using the [runtimevar](https://gocloud.dev/howto/runtimevar/) abstraction layer.
+* Reading images to upload or replace using the [blob](https://gocloud.dev/howto/blob/) abstraction layer.
+* Persisting client authorization details (like request tokens) between stateless HTTP requests using the [docstore](https://gocloud.dev/howto/docstore/) abstraction layer.
+
+Rather than bundling the code for all the services that the `GoCloud` APIs support the core of the application code only knows to expect _implementations_ of the relevant interfaces. It is expected that the application code itself (the code defined in `cmd/SOMEAPPLICATION`) will import the necessary packages for supporting a service-specific implementation.
+
+For example, here's what the code for the [cmd/api](cmd/api/main.go) tool looks like:
+
+```
+package main
+
+import (
+	"context"
+	"github.com/aaronland/go-flickr-api/application/api"
+	_ "gocloud.dev/runtimevar/constantvar"
+	_ "gocloud.dev/runtimevar/filevar"
+	"log"
+)
+
+func main() {
+
+	ctx := context.Background()
+
+	app := &api.APIApplication{}
+	_, err := app.Run(ctx)
+
+	if err != nil {
+		log.Fatalf("Failed to run upload application, %v", err)
+	}
+}
+```
+
+This version of the application supports reading client configuration using the `runtimevar` package's [constant://](https://gocloud.dev/howto/runtimevar/#local) and [file://](https://gocloud.dev/howto/runtimevar/#local) schemes. For example:
+
+```
+$> bin/api -use-runtimevar -client-uri file:///path/to/client-uri.cfg -param method=flickr.test.echo
+```
+
+If you wanted a version of the `api` tool that supported reading client configuration stored in the Amazon Web Service's [Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) secrets manager you would rewrite the application like this:
+
+```
+package main
+
+import (
+	"context"
+	"github.com/aaronland/go-flickr-api/application/api"
+	_ "gocloud.dev/runtimevar/awsparamstore"
+	"log"
+)
+
+func main() {
+
+	ctx := context.Background()
+
+	app := &api.APIApplication{}
+	_, err := app.Run(ctx)
+
+	if err != nil {
+		log.Fatalf("Failed to run upload application, %v", err)
+	}
+}
+```
+
+And then invoke it like this:
+
+```
+$> bin/api -use-runtimevar -client-uri 'awsparamstore://{NAME}?region={REGION}&decoder=string' -param method=flickr.test.echo
+```
+
+The only thing that changes is the `runtimevar` package that your code imports. The rest of the application is encapsulated in the `APIApplication` instance.
 
 ## See also
 

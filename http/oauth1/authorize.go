@@ -17,7 +17,7 @@ import (
 // necessary for all OAuth1 authorization callback requests.
 type AuthorizationTokenHandlerOptions struct {
 	// A client.Client instance used to call the Flickr API
-	Client     client.Client
+	Client client.Client
 	// A gocloud.dev/docstore.Collection instance used to retrieve request token details necessary for creating permanent access tokens.
 	Collection *docstore.Collection
 }

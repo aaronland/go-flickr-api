@@ -10,12 +10,12 @@ import (
 // RequestTokenHandlerOptions is a struct containing application-specific details
 // necessary for all OAuth1 authorization flow requests.
 type RequestTokenHandlerOptions struct {
-	// A client.Client instance used to call the Flickr API	
-	Client       client.Client
-	// A gocloud.dev/docstore.Collection instance used to store request token details necessary for creating permanent access tokens.	
-	Collection   *docstore.Collection
+	// A client.Client instance used to call the Flickr API
+	Client client.Client
+	// A gocloud.dev/docstore.Collection instance used to store request token details necessary for creating permanent access tokens.
+	Collection *docstore.Collection
 	// The Flickr API permissions that your application is requesting.
-	Permissions  string
+	Permissions string
 	// The fully qualified callback URL to be invoked by Flickr if an autorization request is approved.
 	AuthCallback string
 }
