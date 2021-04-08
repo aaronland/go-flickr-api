@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"gocloud.dev/blob"
-	_ "gocloud.dev/blob/fileblob"
 	"io"
 	_ "log"
 	"net/url"

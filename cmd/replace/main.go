@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/aaronland/go-flickr-api/application/replace"
+	_ "gocloud.dev/blob/fileblob"
 	_ "gocloud.dev/runtimevar/constantvar"
 	_ "gocloud.dev/runtimevar/filevar"
 	"log"

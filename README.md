@@ -176,6 +176,10 @@ Command-line tool for uploading an image to Flickr.
     	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
 ```
 
+Under the hood the `upload` tool is using the GoCloud [blob](https://gocloud.dev/howto/blob/) abstraction layer for reading files. By default only local files the `file://` URI scheme are supported. If you need to read files from other sources you will need to clone this application and import the relevant packages.
+
+As a convenience if no URI scheme is included then each path will be resolved to its absolute URI and prepended with `file://`.
+
 ### replace
 
 Command-line tool for replacing an image in Flickr.
@@ -192,6 +196,10 @@ Usage of ./bin/replace:
   -use-runtimevar
     	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
 ```
+
+Under the hood the `replace` tool is using the GoCloud [blob](https://gocloud.dev/howto/blob/) abstraction layer for reading files. By default only local files the `file://` URI scheme are supported. If you need to read files from other sources you will need to clone this application and import the relevant packages.
+
+As a convenience if no URI scheme is included then each path will be resolved to its absolute URI and prepended with `file://`.
 
 ### Design
 
