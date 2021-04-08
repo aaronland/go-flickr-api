@@ -8,6 +8,7 @@ import (
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/http/oauth1"
 	"github.com/aaronland/go-http-server"
+	"github.com/mitchellh/go-wordwrap"
 	"github.com/sfomuseum/go-flags/flagset"
 	"github.com/sfomuseum/runtimevar"
 	"gocloud.dev/docstore"
@@ -42,8 +43,12 @@ func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "HTTP server for initiating a Flickr API autorization flow in a web browser.\n\n")
-		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage:\n\t%s [options]\n\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Valid options are:\n")
 		fs.PrintDefaults()
+		fmt.Fprintf(os.Stderr, wordwrap.WrapString("If you are running this application on localhost and are not using a 'tls://' server-uri flag (including your own TLS key and certificate) you will need to specify the 'mkcert://' server-uri flag and ensure that you have the https://github.com/FiloSottile/mkcert tool installed on your computer. This is because Flickr will automatically rewrite authorization callback URLs starting in 'http://' to 'https://' even if those URLs are pointing back to localhost.\n", 80))
+
+		fmt.Fprintf(os.Stderr, "\n")
 	}
 
 	return fs

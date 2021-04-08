@@ -73,9 +73,12 @@ Command-line tool for invoking the Flickr API. Results are emitted to STDOUT. Up
 
 ```
 $> ./bin/api -h
-Command-line tool for invoking the Flickr API. Results are emitted to STDOUT. Uploading and replacing images are not supported by this tool.
+Command-line tool for invoking the Flickr API. Results are emitted to STDOUT.
 
-Usage of ./bin/api:
+Usage:
+	./bin/api [options]
+
+Valid options are:
   -client-uri string
     	A valid aaronland/go-flickr-api client URI.
   -paginated
@@ -84,6 +87,11 @@ Usage of ./bin/api:
     	Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.
   -use-runtimevar
     	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+
+Notes:
+
+Uploading and replacing images are not supported by this tool. You can use the
+'upload' and 'replace' tools, respectively, for those tasks.
 ```
 
 For example:
@@ -112,10 +120,13 @@ $> ./bin/api \
 Command-line tool for initiating a Flickr API authorization flow.
 
 ```
-> ./bin/auth-cli -h
+$> ./bin/auth-cli -h
 Command-line tool for initiating a Flickr API authorization flow.
 
-Usage of ./bin/auth-cli:
+Usage:
+	./bin/auth-cli [options]
+
+Valid options are:
   -client-uri string
     	A valid aaronland/go-flickr-api client URI.
   -permissions string
@@ -124,6 +135,15 @@ Usage of ./bin/auth-cli:
     	A valid aaronland/go-http-server URI.
   -use-runtimevar
     	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+
+Notes:
+
+If you are running this application on localhost and are not using a 'tls://'
+server-uri flag (including your own TLS key and certificate) you will need to
+specify the 'mkcert://' server-uri flag and ensure that you have the
+https://github.com/FiloSottile/mkcert tool installed on your computer. This is
+because Flickr will automatically rewrite authorization callback URLs starting
+in 'http://' to 'https://' even if those URLs are pointing back to localhost.
 ```
 
 For example:
@@ -146,7 +166,12 @@ HTTP server for initiating a Flickr API autorization flow in a web browser.
 
 ```
 $> ./bin/auth-www -h
-Usage of ./bin/auth-www:
+HTTP server for initiating a Flickr API autorization flow in a web browser.
+
+Usage:
+	./bin/auth-www [options]
+
+Valid options are:
   -client-uri string
     	A valid aaronland/go-flickr-api client URI.
   -collection-uri string
@@ -157,6 +182,12 @@ Usage of ./bin/auth-www:
     	A valid aaronland/go-http-server URI.
   -use-runtimevar
     	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+If you are running this application on localhost and are not using a 'tls://'
+server-uri flag (including your own TLS key and certificate) you will need to
+specify the 'mkcert://' server-uri flag and ensure that you have the
+https://github.com/FiloSottile/mkcert tool installed on your computer. This is
+because Flickr will automatically rewrite authorization callback URLs starting
+in 'http://' to 'https://' even if those URLs are pointing back to localhost.
 ```
 
 ### upload
@@ -165,20 +196,28 @@ Command-line tool for uploading an image to Flickr.
 
 ```
 $> ./bin/upload -h
-Usage of ./bin/upload:
-Command-line tool for uploading an image to Flickr.
+Command-line tool for uploading one or more images to Flickr.
 
+Usage:
+	./bin/upload [options] path(N) path(N)
+
+Valid options are:
   -client-uri string
     	A valid aaronland/go-flickr-api client URI.
   -param value
     	Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.
   -use-runtimevar
     	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+
+Notes:
+
+Under the hood the upload tool is using the GoCloud blob abstraction layer for
+reading files. By default only local files the file:// URI scheme are supported.
+If you need to read files from other sources you will need to clone this
+application and import the relevant packages. As a convenience if no URI scheme
+is included then each path will be resolved to its absolute URI and prepended
+with file://.
 ```
-
-Under the hood the `upload` tool is using the GoCloud [blob](https://gocloud.dev/howto/blob/) abstraction layer for reading files. By default only local files the `file://` URI scheme are supported. If you need to read files from other sources you will need to clone this application and import the relevant packages.
-
-As a convenience if no URI scheme is included then each path will be resolved to its absolute URI and prepended with `file://`.
 
 ### replace
 
@@ -188,18 +227,26 @@ Command-line tool for replacing an image in Flickr.
 $> ./bin/replace -h
 Command-line tool for replacing an image in Flickr.
 
-Usage of ./bin/replace:
+Usage:
+	./bin/replace [options] path(N) path(N)
+
+Valid options are:
   -client-uri string
     	A valid aaronland/go-flickr-api client URI.
   -param value
     	Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.
   -use-runtimevar
     	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+
+Notes:
+
+Under the hood the replace tool is using the GoCloud blob abstraction layer for
+reading files. By default only local files the file:// URI scheme are supported.
+If you need to read files from other sources you will need to clone this
+application and import the relevant packages. As a convenience if no URI scheme
+is included then each path will be resolved to its absolute URI and prepended
+with file://.
 ```
-
-Under the hood the `replace` tool is using the GoCloud [blob](https://gocloud.dev/howto/blob/) abstraction layer for reading files. By default only local files the `file://` URI scheme are supported. If you need to read files from other sources you will need to clone this application and import the relevant packages.
-
-As a convenience if no URI scheme is included then each path will be resolved to its absolute URI and prepended with `file://`.
 
 ### Design
 

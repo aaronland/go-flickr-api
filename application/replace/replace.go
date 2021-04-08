@@ -44,6 +44,8 @@ func (app *ReplaceApplication) DefaultFlagSet() *flag.FlagSet {
 		fs.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "\nNotes:\n\n")
 		fmt.Fprintf(os.Stderr, wordwrap.WrapString("Under the hood the replace tool is using the GoCloud blob abstraction layer for reading files. By default only local files the file:// URI scheme are supported. If you need to read files from other sources you will need to clone this application and import the relevant packages. As a convenience if no URI scheme is included then each path will be resolved to its absolute URI and prepended with file://.\n", 80))
+
+		fmt.Fprintf(os.Stderr, "\n")
 	}
 
 	return fs
