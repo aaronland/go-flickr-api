@@ -32,7 +32,6 @@ func main() {
 	args.Set("method", "flickr.test.login")
 
 	fh, _ := cl.ExecuteMethod(ctx, args)
-
 	defer fh.Close()
 	
 	io.Copy(os.Stdout, fh)
@@ -51,7 +50,7 @@ The core of this package's approach to the Flickr API is the `ExecuteMethod` met
 
 This package only defines [a handful of Go types or structs mapping to individual API responses](response). So far these are all specific to operations relating to uploading or replacing photos and to pagination.
 
-In time there may be, along with helper methods for unmarshaling API responses in to typed responses but the baseline for all operations will remain: Query (`url.Values`) parameters sent over HTTP returning an `io.ReadSeekCloser` instance that is inspected and validated according to the needs and uses of the tools using the Flickr API.
+In time there may be, along with helper methods for unmarshaling API responses in to typed responses but the baseline for all operations will remain: Query paramters (`url.Values`) sent over HTTP returning an `io.ReadSeekCloser` instance that is inspected and validated according to the needs and uses of the tools using the Flickr API.
 
 ## Tools
 

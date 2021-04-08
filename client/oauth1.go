@@ -221,7 +221,7 @@ func (cl *OAuth1Client) GetAccessToken(ctx context.Context, req_token auth.Reque
 	return auth.UnmarshalOAuth1AccessToken(string(rsp_body))
 }
 
-// Execute a Flickr API method.
+// Execute a Flickr API method. If not "format" parameter in include in the url.Values instance passed to the method API responses will be returned as JSON (by automatically assign the 'nojsoncallback=1' and 'format=json' parameters).
 func (cl *OAuth1Client) ExecuteMethod(ctx context.Context, args *url.Values) (io.ReadSeekCloser, error) {
 
 	endpoint, err := url.Parse(API_ENDPOINT)
