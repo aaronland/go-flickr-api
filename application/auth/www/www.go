@@ -46,6 +46,7 @@ func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 		fmt.Fprintf(os.Stderr, "Usage:\n\t%s [options]\n\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "Valid options are:\n")
 		fs.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nNotes:\n\n")		
 		fmt.Fprintf(os.Stderr, wordwrap.WrapString("If you are running this application on localhost and are not using a 'tls://' server-uri flag (including your own TLS key and certificate) you will need to specify the 'mkcert://' server-uri flag and ensure that you have the https://github.com/FiloSottile/mkcert tool installed on your computer. This is because Flickr will automatically rewrite authorization callback URLs starting in 'http://' to 'https://' even if those URLs are pointing back to localhost.\n", 80))
 
 		fmt.Fprintf(os.Stderr, "\n")

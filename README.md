@@ -69,7 +69,7 @@ go build -mod vendor -o bin/auth-www cmd/auth-www/main.go
 
 ### api
 
-Command-line tool for invoking the Flickr API. Results are emitted to STDOUT. Uploading and replacing images are not supported by this tool.
+Command-line tool for invoking the Flickr API. Results are emitted to STDOUT.
 
 ```
 $> ./bin/api -h
@@ -182,6 +182,9 @@ Valid options are:
     	A valid aaronland/go-http-server URI.
   -use-runtimevar
     	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+
+Notes:
+
 If you are running this application on localhost and are not using a 'tls://'
 server-uri flag (including your own TLS key and certificate) you will need to
 specify the 'mkcert://' server-uri flag and ensure that you have the
