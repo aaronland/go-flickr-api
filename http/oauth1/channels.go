@@ -36,7 +36,7 @@ func NewAuthorizationTokenHandlerWithChannels(token_ch chan auth.AuthorizationTo
 
 		token_ch <- auth_token
 
-		rsp.Write([]byte(`Authorization request successful.`))
+		rsp.Write([]byte(`Authorization request successful. You can close this browser window and return to the authorization application.`))
 		return
 	}
 

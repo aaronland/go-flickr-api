@@ -21,10 +21,35 @@ var params multi.KeyValueString
 var client_uri string
 var use_runtimevar bool
 
+// UploadResult is struct containing information about an atomic upload.
 type UploadResult struct {
-	Path    string `json:"path,omitempty"`
-	PhotoId int64  `json:"photoid,omitempty"`
-	Error   error  `json:"error,omitempty"`
+	// The URI of file that was uploaded.
+	Path string `json:"path,omitempty"`
+	// The Photo ID of a successfully uploaded file.
+	PhotoId int64 `json:"photoid,omitempty"`
+	// An UploadError instance if the file was not able to be uploaded.
+	Error *UploadError `json:"error,omitempty"`
+}
+
+// UploadError is a custom error type that can be JSON-serialized.
+type UploadError struct {
+	error
+}
+
+// The error message associated with this instance.
+func (e *UploadError) Error() string {
+	return e.error.Error()
+}
+
+// The error message associated with this instance.
+func (e *UploadError) String() string {
+	return e.Error()
+}
+
+// This error instance serialized as a string for JSON-marshaling.
+func (e *UploadError) MarshalJSON() ([]byte, error) {
+	err_q := fmt.Sprintf(`"%s"`, e.Error())
+	return []byte(err_q), nil
 }
 
 // UploadApplication implements the application.Application interface as a commandline application for
@@ -116,7 +141,7 @@ func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagS
 			fh, err := reader.NewReader(ctx, path)
 
 			if err != nil {
-				rsp.Error = fmt.Errorf("Failed to create reader for '%s', %v", path, err)
+				rsp.Error = &UploadError{fmt.Errorf("Failed to create reader for '%s', %v", path, err)}
 				rsp_ch <- rsp
 				return
 			}
@@ -126,7 +151,7 @@ func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagS
 			photo_id, err := client.UploadAsyncWithClient(ctx, cl, fh, args)
 
 			if err != nil {
-				rsp.Error = fmt.Errorf("Failed to upload '%s', %v", err)
+				rsp.Error = &UploadError{fmt.Errorf("Failed to upload image '%s', %v", path, err)}
 				rsp_ch <- rsp
 				return
 			}

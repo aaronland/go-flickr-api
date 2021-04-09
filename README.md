@@ -2,7 +2,7 @@
 
 Go package for working with the Flickr API
 
- [![Go Reference](https://pkg.go.dev/badge/github.com/aaronland/go-flickr-api.svg)](https://pkg.go.dev/github.com/aaronland/go-flickr-api)
+[![Go Reference](https://pkg.go.dev/badge/github.com/aaronland/go-flickr-api.svg)](https://pkg.go.dev/github.com/aaronland/go-flickr-api)
  
 ## Important
 
@@ -157,6 +157,8 @@ $> ./bin/auth-cli \
 2021/03/31 22:47:09 Listening for requests on https://localhost:8080
 2021/03/31 22:47:13 Authorize this application https://www.flickr.com/services/oauth/authorize?oauth_token={TOKEN}&perms=read
 
+...Visit web browser, approve request, return to command-line to see:
+
 {"oauth_token":"{TOKEN}","oauth_token_secret":"{SECRET}"}
 ```
 
@@ -193,6 +195,11 @@ because Flickr will automatically rewrite authorization callback URLs starting
 in 'http://' to 'https://' even if those URLs are pointing back to localhost.
 ```
 
+For example:
+
+```
+```
+
 ### upload
 
 Command-line tool for uploading an image to Flickr.
@@ -220,6 +227,42 @@ If you need to read files from other sources you will need to clone this
 application and import the relevant packages. As a convenience if no URI scheme
 is included then each path will be resolved to its absolute URI and prepended
 with file://.
+```
+
+For example, here's what would happen if you tried to upload an image using a client URI that _does not_ have an associated auth token (and secret):
+
+```
+$> bin/upload \
+	-client-uri file:///usr/local/flickr/client.txt \
+	-use-runtimevar \
+	/usr/local/flickr/camera.png
+
+| jq
+
+[
+  {
+    "path": "/usr/local/flickr/camera.png",
+    "error": "Failed to upload image '/usr/local/flickr/camera.png', API call failed with status '401 Unauthorized'"
+  }
+]
+```
+
+And here's an example of a successful upload:
+
+```
+$> bin/upload \
+	-client-uri file:///usr/local/flickr/client-with-auth-token.txt \
+	-use-runtimevar \
+	/usr/local/flickr/camera.png
+
+| jq
+
+[
+  {
+    "path": "/Users/asc/Desktop/camera.png",
+    "photoid": 51105221286
+  }
+]
 ```
 
 ### replace
