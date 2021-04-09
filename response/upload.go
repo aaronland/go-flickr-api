@@ -6,10 +6,12 @@ import (
 )
 
 type Upload struct {
-	XMLName xml.Name `xml:"rsp"`
-	Status  string   `xml:"stat,attr"`
-	Error   *Error   `xml:"err,omitempty"`
-	PhotoId int64    `xml:"photoid"`
+	XMLName        xml.Name `xml:"rsp"`
+	Status         string   `xml:"stat,attr"`
+	Error          *Error   `xml:"err,omitempty"`
+	PhotoId        int64    `xml:"photoid"`
+	Secret         string   `xml:"secret,attr,omitempty"`
+	OriginalSecret string   `xml:"originalsecret,attr,omitempty"`
 }
 
 type UploadTicket struct {
