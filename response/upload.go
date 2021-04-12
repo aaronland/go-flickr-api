@@ -6,19 +6,25 @@ import (
 )
 
 type Upload struct {
-	XMLName        xml.Name `xml:"rsp"`
-	Status         string   `xml:"stat,attr"`
-	Error          *Error   `xml:"err,omitempty"`
-	PhotoId        int64    `xml:"photoid"`
-	Secret         string   `xml:"secret,attr,omitempty"`
-	OriginalSecret string   `xml:"originalsecret,attr,omitempty"`
+	XMLName xml.Name `xml:"rsp"`
+	// The Flickr API response status.
+	Status string       `xml:"stat,attr"`
+	Error  *Error       `xml:"err,omitempty"`
+	Photo  *UploadPhoto `xml:"photoid"`
+}
+
+type UploadPhoto struct {
+	Id             int64  `xml:",chardata"`
+	Secret         string `xml:"secret,attr,omitempty"`
+	OriginalSecret string `xml:"originalsecret,attr,omitempty"`
 }
 
 type UploadTicket struct {
-	XMLName  xml.Name `xml:"rsp"`
-	Status   string   `xml:"stat,attr"`
-	Error    *Error   `xml:"err,omitempty"`
-	TicketId string   `xml:"ticketid"`
+	XMLName xml.Name `xml:"rsp"`
+	// The Flickr API response status.
+	Status   string `xml:"stat,attr"`
+	Error    *Error `xml:"err,omitempty"`
+	TicketId string `xml:"ticketid"`
 }
 
 func UnmarshalUploadResponse(fh io.Reader) (*Upload, error) {
@@ -50,7 +56,7 @@ func UnmarshalUploadTicketResponse(fh io.Reader) (*UploadTicket, error) {
 
 	var up *UploadTicket
 
-	err = xml.Unmarshal([]byte(body), &up)
+	err = xml.Unmarshal(body, &up)
 
 	if err != nil {
 		return nil, err

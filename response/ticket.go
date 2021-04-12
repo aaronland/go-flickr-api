@@ -32,6 +32,21 @@ type UploaderTicket struct {
 	Imported string `json:"imported"`
 }
 
+// Unmarshal Flickr API flickr.photos.upload method response, for asynchronous uploads, in to a UploadTicket instance.
+func UmarshalUploadTicketResponse(fh io.Reader) (*UploadTicket, error) {
+
+	var ut *UploadTicket
+
+	dec := json.NewDecoder(fh)
+	err := dec.Decode(&ut)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ut, nil
+}
+
 // Unmarshal Flickr API flickr.photos.upload.checkTickets method response into a CheckTicket instance.
 func UnmarshalCheckTicketResponse(fh io.Reader) (*CheckTicket, error) {
 
