@@ -2,6 +2,7 @@ package replace
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/aaronland/go-flickr-api/application"
@@ -12,7 +13,6 @@ import (
 	"github.com/sfomuseum/go-flags/flagset"
 	"github.com/sfomuseum/go-flags/multi"
 	"github.com/sfomuseum/runtimevar"
-	"io"
 	"log"
 	"net/url"
 	"os"
@@ -121,10 +121,12 @@ func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.Flag
 			return nil, fmt.Errorf("Upload failed, %v", up.Error)
 		}
 
-		log.Println(up, up.Error)
+		enc := json.NewEncoder(os.Stdout)
+		err = enc.Encode(up)
 
-		rsp.Seek(0, 0)
-		io.Copy(os.Stdout, rsp)
+		if err != nil {
+			log.Fatalf("Failed to encode results, %v", err)
+		}
 	}
 
 	return nil, nil

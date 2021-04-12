@@ -294,6 +294,25 @@ is included then each path will be resolved to its absolute URI and prepended
 with file://.
 ```
 
+For example:
+
+```
+$> bin/replace \
+	-client-uri file:///usr/local/flickr/client-with-auth-token.txt \
+	-use-runtimevar \
+	-param photo_id=51111590154
+	/usr/local/flickr/cat.png
+
+{
+  "stat": "ok",
+  "photo": {
+    "id": 51111590154,
+    "secret": "ba5d1012c3",
+    "originalsecret": "67d1175ea0"
+  }
+}
+```
+
 ### Design
 
 The guts of all the tools bundled with this package are kept in the [application](application) directory rather than in application code itself. That's because the tools rely on the [GoCloud](https://gocloud.dev/) APIs for specific functionality. These are:
