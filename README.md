@@ -52,6 +52,29 @@ This package only defines [a handful of Go types or structs mapping to individua
 
 In time there may be, along with helper methods for unmarshaling API responses in to typed responses but the baseline for all operations will remain: Query paramters (`url.Values`) sent over HTTP returning an `io.ReadSeekCloser` instance that is inspected and validated according to the needs and uses of the tools using the Flickr API.
 
+## Clients
+
+The `client.Client` interface provides for common methods for accessing the Flickr API. Currently there is only a single client interface that calls the Flickr API using the OAuth1 authentication and authorization scheme but it is assumed that eventually there will be at least one other when OAuth1 is superseded.
+
+Clients are instantiated using a URI-based syntax where the scheme and query parameters map to specific implementation details.
+
+### OAuth1
+
+The OAuth1 `Client` implementation is instantiated using the `oauth1://` scheme. For example:
+
+```
+oauth1://?{QUERY_PARAMETERS}
+```
+
+Valid query parameters are:
+
+| Name | Value | Required |
+| --- | --- | --- |
+| `consumer_key` | string | yes |
+| `consumer_secret` | string | yes |
+| `oauth_token` | string | no |
+| `oauth_token_secret` | string | no |
+
 ## Tools
 
 This package comes with a series of opinionated applications to implement functionality exposed by the Flickr API. These easiest way to build them is to run the handy `cli` target in the Makefile that comes bundled with this package.
