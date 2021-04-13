@@ -1,5 +1,3 @@
-package api
-
 // Example
 // ```
 // package main
@@ -43,4 +41,4 @@ package api
 // This package only defines [a handful of Go types or structs mapping to individual API responses](response). So far these are all specific to operations relating to uploading or replacing photos and to pagination.
 //
 // In time there may be, along with helper methods for unmarshaling API responses in to typed responses but the baseline for all operations will remain: Query (`url.Values`) parameters sent over HTTP returning an `io.ReadSeekCloser` instance that is inspected and validated according to the needs and uses of the tools using the Flickr API.
-//
+package api
