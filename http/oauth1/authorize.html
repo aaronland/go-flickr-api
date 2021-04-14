@@ -8,7 +8,18 @@
 
   <body>
       <div class="container">
+	  {{ if .Error }}
+	  <p>There was a problem completing your authorization request: {{ .Error }}</p>
+	  {{ else }}
 	  <p>Authorization request successful.</p>
+
+	  <table>
+	      <tr><th>User ID</th><td>{{ .User.Id }}</td></tr>
+	      <tr><th>User Name</th><td>{{ .User.Username.Value }}</td></tr>
+	      <tr><th>Access Token</th><td>{{ .AccessToken.Token }}</td></tr>
+	      <tr><th>Access Token Secret</th><td>{{ .AccessToken.Secret }}</td></tr>
+	  </table>
+	  {{ end }}
       </div>
   </body>
 </html>
