@@ -6,7 +6,7 @@ import (
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-http-sanitize"
 	"gocloud.dev/docstore"
-	_ "io"
+	"io"
 	"log"
 	gohttp "net/http"
 	"net/url"
@@ -92,12 +92,14 @@ func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohtt
 		args := &url.Values{}
 		args.Set("method", "flickr.test.login")
 
-		_, err = cl.ExecuteMethod(ctx, args)
+		login_rsp, err := cl.ExecuteMethod(ctx, args)
 
 		if err != nil {
 			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
 			return
 		}
+
+		defer login_rsp.Close()
 
 		// STORE auth_token... WHERE? AND THEN WHAT?
 
