@@ -81,22 +81,6 @@ func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet
 		}
 
 		client_uri = runtime_uri
-
-		runtime_uri, err = runtimevar.StringVar(ctx, server_uri)
-
-		if err != nil {
-			return nil, fmt.Errorf("Failed to derive runtime value for server URI, %v", err)
-		}
-
-		server_uri = runtime_uri
-
-		runtime_uri, err = runtimevar.StringVar(ctx, collection_uri)
-
-		if err != nil {
-			return nil, fmt.Errorf("Failed to derive runtime value for collection URI, %v", err)
-		}
-
-		collection_uri = runtime_uri
 	}
 
 	ctx, cancel := context.WithCancel(ctx)

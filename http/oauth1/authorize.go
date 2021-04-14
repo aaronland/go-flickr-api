@@ -6,11 +6,11 @@ import (
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-http-sanitize"
 	"gocloud.dev/docstore"
-	"io"
+	_ "io"
 	"log"
 	gohttp "net/http"
 	"net/url"
-	_ "os"
+	"os"
 )
 
 // AuthorizationTokenHandlerOptions is a struct containing application-specific details
@@ -101,7 +101,7 @@ func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohtt
 
 		// STORE auth_token... WHERE? AND THEN WHAT?
 
-		enc := json.NewEncoder(io.Discard)
+		enc := json.NewEncoder(os.Stdout)
 		err = enc.Encode(access_token)
 
 		if err != nil {
