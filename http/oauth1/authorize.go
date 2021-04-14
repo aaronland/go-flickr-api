@@ -1,17 +1,20 @@
 package oauth1
 
 import (
-	"encoding/json"
+	_ "embed"
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/aaronland/go-flickr-api/client"
+	"github.com/aaronland/go-flickr-api/response"
 	"github.com/aaronland/go-http-sanitize"
 	"gocloud.dev/docstore"
-	"io"
+	"html/template"
 	"log"
 	gohttp "net/http"
 	"net/url"
-	"os"
 )
+
+//go:embed authorize.html
+var authorize_t string
 
 // AuthorizationTokenHandlerOptions is a struct containing application-specific details
 // necessary for all OAuth1 authorization callback requests.
@@ -22,10 +25,24 @@ type AuthorizationTokenHandlerOptions struct {
 	Collection *docstore.Collection
 }
 
+type AuthorizationVars struct {
+	Error       error
+	User        *response.User
+	AccessToken auth.AccessToken
+}
+
 // Return a new HTTP handler to receive a process OAuth1 authorization callback requests. This handler will
 // retrieve the request token associated with the authorization request and exchange these elements for a permanent
 // OAuth1 access token.
 func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohttp.Handler, error) {
+
+	t := template.New("authorize")
+
+	t, err := t.Parse(authorize_t)
+
+	if err != nil {
+		return nil, err
+	}
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
 
@@ -101,17 +118,25 @@ func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohtt
 
 		defer login_rsp.Close()
 
-		// STORE auth_token... WHERE? AND THEN WHAT?
-
-		enc := json.NewEncoder(os.Stdout)
-		err = enc.Encode(access_token)
+		login, err := response.UnmarshalCheckLoginJSONResponse(login_rsp)
 
 		if err != nil {
 			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
 			return
 		}
 
-		rsp.Write([]byte(`Authorization request successful.`))
+		vars := AuthorizationVars{
+			User:        login.User,
+			AccessToken: access_token,
+		}
+
+		err = t.Execute(rsp, vars)
+
+		if err != nil {
+			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			return
+		}
+
 		return
 	}
 

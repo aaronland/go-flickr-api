@@ -221,6 +221,15 @@ in 'http://' to 'https://' even if those URLs are pointing back to localhost.
 For example:
 
 ```
+$> ./bin/auth-www \
+	-permissions write \
+	-server-uri 'mkcert://localhost:8080' \
+	-collection-uri 'mem://collection/Token' \
+	-client-uri file:///usr/local/flickr/client.txt \
+	-use-runtimevar
+
+2021/04/14 10:58:36 Checking whether mkcert is installed. If it is not you may be prompted for your password (in order to install certificate files
+2021/04/14 10:58:38 Listening for requests on https://localhost:8080
 ```
 
 ### upload
