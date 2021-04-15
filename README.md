@@ -2,10 +2,6 @@
 
 Go package for working with the Flickr API
  
-## Important
-
-This is nearly, but not quite, complete. Some things may still change and not all the documentation is finished.
-
 ## Documentation
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/aaronland/go-flickr-api.svg)](https://pkg.go.dev/github.com/aaronland/go-flickr-api)
@@ -80,8 +76,6 @@ Valid query parameters are:
 ## Tools
 
 This package comes with a series of opinionated applications to implement functionality exposed by the Flickr API. These easiest way to build them is to run the handy `cli` target in the Makefile that comes bundled with this package.
-
-_As of this writing the documentation and final output of all but the `api` tool is incomplete and subject to change still._
 
 ```
 $> make cli
