@@ -396,7 +396,10 @@ func main() {
 This version of the application supports reading client configuration using the `runtimevar` package's [constant://](https://gocloud.dev/howto/runtimevar/#local) and [file://](https://gocloud.dev/howto/runtimevar/#local) schemes. For example:
 
 ```
-$> bin/api -use-runtimevar -client-uri file:///path/to/client-uri.cfg -param method=flickr.test.echo
+$> bin/api \
+	-use-runtimevar \
+	-client-uri file:///path/to/client-uri.cfg \
+	-param method=flickr.test.echo
 ```
 
 If you wanted a version of the `api` tool that supported reading client configuration stored in the Amazon Web Service's [Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) secrets manager you would rewrite the application like this:
@@ -427,7 +430,10 @@ func main() {
 And then invoke it like this:
 
 ```
-$> bin/api -use-runtimevar -client-uri 'awsparamstore://{NAME}?region={REGION}&decoder=string' -param method=flickr.test.echo
+$> bin/api \
+	-use-runtimevar \
+	-client-uri 'awsparamstore://{NAME}?region={REGION}&decoder=string' \
+	-param method=flickr.test.echo
 ```
 
 The only thing that changes is the `runtimevar` package that your code imports. The rest of the application is encapsulated in the `APIApplication` instance.
