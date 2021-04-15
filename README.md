@@ -43,7 +43,7 @@ _Error handling removed for the sake of brevity._
 The core of this package's approach to the Flickr API is the `ExecuteMethod` method (which is defined in the `client.Client` interface) whose signature looks like this:
 
 ```
-	ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
+ExecuteMethod(context.Context, *url.Values) (io.ReadSeekCloser, error)
 ```
 
 This package only defines [a handful of Go types or structs mapping to individual API responses](response). So far these are all specific to operations relating to uploading or replacing photos and to pagination.
