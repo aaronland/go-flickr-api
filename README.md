@@ -359,7 +359,7 @@ $> bin/replace \
 
 ### Design
 
-The guts of all the tools bundled with this package are kept in the [application](application) directory rather than in application code itself. That's because the tools rely on the [GoCloud](https://gocloud.dev/) APIs for specific functionality. These are:
+The guts of all the tools bundled with this package are kept in the [application](application) directory rather than in application code itself. That's because the tools rely on the [GoCloud](https://gocloud.dev/) APIs for specific functionality:
 
 * Reading sensitive configuration data using the [runtimevar](https://gocloud.dev/howto/runtimevar/) abstraction layer.
 * Reading images to upload or replace using the [blob](https://gocloud.dev/howto/blob/) abstraction layer.
