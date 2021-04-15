@@ -234,6 +234,8 @@ $> ./bin/auth-www \
 2021/04/14 10:58:38 Listening for requests on https://localhost:8080
 ```
 
+_Note the use of the `-use-runtimevar` flag and the `file://` syntax for the `-client-uri` flag. This allows us to store credentials for the Flickr API client in a [GoCloud runtimevar](https://gocloud.dev/howto/runtimevar/) resource and not expose them on the command-line. Details are discussed below in the [Design](https://github.com/aaronland/go-flickr-api#design-1) section._
+
 If you open the URL `https://localhost:8080` in your web browser you'll see a simple web page with a button for starting the Flickr authorization process.
 
 ![](docs/images/auth-www-begin.png)
@@ -246,7 +248,7 @@ Once you do you'll be redirected back to the website hosted on `localhost:8080` 
 
 ![](docs/images/auth-www-response.png)
 
-You should think of the `auth-www` tool as a sample application, or at best a helper, for creating OAuth1 access tokens on behalf of a user rather than a drop-in widget for a more sophisticated application.
+_You should think of the `auth-www` tool as a sample application, or at best a helper, for creating OAuth1 access tokens on behalf of a user rather than a drop-in widget for a more sophisticated application._
 
 ### upload
 
