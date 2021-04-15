@@ -318,7 +318,7 @@ $> ./bin/replace -h
 Command-line tool for replacing an image in Flickr.
 
 Usage:
-	./bin/replace [options] path(N) path(N)
+	./bin/replace [options] path(N)
 
 Valid options are:
   -client-uri string

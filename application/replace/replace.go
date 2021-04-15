@@ -39,7 +39,7 @@ func (app *ReplaceApplication) DefaultFlagSet() *flag.FlagSet {
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Command-line tool for replacing an image in Flickr.\n\n")
-		fmt.Fprintf(os.Stderr, "Usage:\n\t%s [options] path(N) path(N)\n\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage:\n\t%s [options] path(N)\n\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "Valid options are:\n")
 		fs.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "\nNotes:\n\n")
