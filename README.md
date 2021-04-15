@@ -303,7 +303,7 @@ $> bin/upload \
 
 [
   {
-    "path": "/Users/asc/Desktop/camera.png",
+    "path": "/usr/local/flickr/camera.png",
     "photoid": 51105221286
   }
 ]
