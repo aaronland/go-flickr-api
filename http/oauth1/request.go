@@ -1,11 +1,16 @@
 package oauth1
 
 import (
+	_ "embed"
 	"github.com/aaronland/go-flickr-api/client"
 	"gocloud.dev/docstore"
+	"html/template"
 	_ "log"
 	gohttp "net/http"
 )
+
+//go:embed request.html
+var request_t string
 
 // RequestTokenHandlerOptions is a struct containing application-specific details
 // necessary for all OAuth1 authorization flow requests.
@@ -24,39 +29,66 @@ type RequestTokenHandlerOptions struct {
 // Flickr API OAuth1 authorization approval endpoint.
 func NewRequestTokenHandler(opts *RequestTokenHandlerOptions) (gohttp.Handler, error) {
 
+	t := template.New("request")
+
+	t, err := t.Parse(request_t)
+
+	if err != nil {
+		return nil, err
+	}
+
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
 
 		ctx := req.Context()
 
-		req_token, err := opts.Client.GetRequestToken(ctx, opts.AuthCallback)
+		switch req.Method {
+		case "GET":
 
-		if err != nil {
-			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			err = t.Execute(rsp, nil)
+
+			if err != nil {
+				gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+				return
+			}
+
+			return
+
+		case "POST":
+
+			req_token, err := opts.Client.GetRequestToken(ctx, opts.AuthCallback)
+
+			if err != nil {
+				gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+				return
+			}
+
+			cache, err := NewRequestTokenCache(req_token)
+
+			if err != nil {
+				gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+				return
+			}
+
+			err = opts.Collection.Put(ctx, cache)
+
+			if err != nil {
+				gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+				return
+			}
+
+			auth_url, err := opts.Client.GetAuthorizationURL(ctx, req_token, opts.Permissions)
+
+			if err != nil {
+				gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+				return
+			}
+
+			gohttp.Redirect(rsp, req, auth_url, gohttp.StatusFound)
+
+		default:
+			gohttp.Error(rsp, "Method now allowed", gohttp.StatusMethodNotAllowed)
 			return
 		}
-
-		cache, err := NewRequestTokenCache(req_token)
-
-		if err != nil {
-			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
-			return
-		}
-
-		err = opts.Collection.Put(ctx, cache)
-
-		if err != nil {
-			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
-			return
-		}
-
-		auth_url, err := opts.Client.GetAuthorizationURL(ctx, req_token, opts.Permissions)
-
-		if err != nil {
-			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
-			return
-		}
-
-		gohttp.Redirect(rsp, req, auth_url, gohttp.StatusFound)
 	}
 
 	return gohttp.HandlerFunc(fn), nil

@@ -4,10 +4,33 @@
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Flickr Authorization Result</title>
+      <style type="text/css">
+              th {
+               text-align: left;
+               padding: .25rem;
+       }
+       td {
+               padding: .25rem;
+       }
+       .secret {
+               display:none;
+       }
+       .secret-wrapper:before {
+               content: "hover to see value";
+               font-style:italic;
+       }
+       .secret-wrapper:hover .secret {
+               display: block;
+       }
+       .secret-wrapper:hover:before {
+               content: "";
+       }
+      </style>
   </head>
 
-  <body>
+  <body>      
       <div class="container">
+	  <h2>Flickr OAuth1 Access Token Response</h2>
 	  {{ if .Error }}
 	  <p>There was a problem completing your authorization request: {{ .Error }}</p>
 	  {{ else }}
@@ -16,8 +39,8 @@
 	  <table>
 	      <tr><th>User ID</th><td>{{ .User.Id }}</td></tr>
 	      <tr><th>User Name</th><td>{{ .User.Username.Value }}</td></tr>
-	      <tr><th>Access Token</th><td>{{ .AccessToken.Token }}</td></tr>
-	      <tr><th>Access Token Secret</th><td>{{ .AccessToken.Secret }}</td></tr>
+	      <tr><th>Access Token</th><td class="secret-wrapper"><span class="secret">{{ .AccessToken.Token }}</span></td></tr>
+	      <tr><th>Access Token Secret</th><td class="secret-wrapper"><span class="secret">{{ .AccessToken.Secret }}</span></td></tr>
 	  </table>
 	  {{ end }}
       </div>
