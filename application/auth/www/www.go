@@ -38,7 +38,7 @@ func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 	fs.StringVar(&client_uri, "client-uri", "", "A valid aaronland/go-flickr-api client URI.")
 	fs.StringVar(&server_uri, "server-uri", "", "A valid aaronland/go-http-server URI.")
 	fs.StringVar(&collection_uri, "collection-uri", "", "A valid gocloud.dev/docstore URI. The docstore is used to store token requests during the time a user is approving an authentication request.")
-	fs.BoolVar(&use_runtimevar, "use-runtimevar", false, "Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.")
+	fs.BoolVar(&use_runtimevar, "use-runtimevar", false, "Signal that the -client-uri flag is encoded as a gocloud.dev/runtimevar string URI.")
 	fs.StringVar(&perms, "permissions", "", "A valid Flickr API permissions flag.")
 
 	fs.Usage = func() {

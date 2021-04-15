@@ -105,7 +105,7 @@ Valid options are:
   -param value
     	Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.
   -use-runtimevar
-    	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+    	Signal that the -client-uri flag is encoded as a gocloud.dev/runtimevar string URI.
 
 Notes:
 
@@ -153,7 +153,7 @@ Valid options are:
   -server-uri string
     	A valid aaronland/go-http-server URI.
   -use-runtimevar
-    	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+    	Signal that the -client-uri flag is encoded as a gocloud.dev/runtimevar string URI.
 
 Notes:
 
@@ -202,7 +202,7 @@ Valid options are:
   -server-uri string
     	A valid aaronland/go-http-server URI.
   -use-runtimevar
-    	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+    	Signal that the -client-uri flag is encoded as a gocloud.dev/runtimevar string URI.
 
 Notes:
 
@@ -261,7 +261,7 @@ Valid options are:
   -param value
     	Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.
   -use-runtimevar
-    	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+    	Signal that the -client-uri flag is encoded as a gocloud.dev/runtimevar string URI.
 
 Notes:
 
@@ -326,7 +326,7 @@ Valid options are:
   -param value
     	Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.
   -use-runtimevar
-    	Signal that all -uri flags are encoded as gocloud.dev/runtimevar string URIs.
+    	Signal that the -client-uri flag is encoded as a gocloud.dev/runtimevar string URI.
 
 Notes:
 
