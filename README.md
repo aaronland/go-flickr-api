@@ -248,7 +248,7 @@ Once you do you'll be redirected back to the website hosted on `localhost:8080` 
 
 ![](docs/images/auth-www-response.png)
 
-_You should think of the `auth-www` tool as a sample application, or at best a helper, for creating OAuth1 access tokens on behalf of a user rather than a drop-in widget for a more sophisticated application._
+_You should think of the `auth-www` tool as a sample application, or at best a helper utility, for creating OAuth1 access tokens on behalf of a user rather than a drop-in widget for a more sophisticated application._
 
 ### upload
 
