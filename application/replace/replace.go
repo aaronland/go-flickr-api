@@ -108,7 +108,7 @@ func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.Flag
 		rsp, err := cl.Replace(ctx, fh, args)
 
 		if err != nil {
-			log.Printf("Failed to replace '%s', %v", err)
+			log.Printf("Failed to replace '%s', %v", path, err)
 		}
 
 		up, err := response.UnmarshalUploadResponse(rsp)

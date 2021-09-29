@@ -8,9 +8,9 @@ import (
 type Upload struct {
 	XMLName xml.Name `xml:"rsp" json:"-"`
 	// The Flickr API response status.
-	Status string       `xml:"stat,attr" json:"stat""`
-	Error  *Error       `xml:"err,omitempty" json:"error,omitempty""`
-	Photo  *UploadPhoto `xml:"photoid" json:"photo,omitempty""`
+	Status string       `xml:"stat,attr" json:"stat"`
+	Error  *Error       `xml:"err,omitempty" json:"error,omitempty"`
+	Photo  *UploadPhoto `xml:"photoid" json:"photo,omitempty"`
 }
 
 type UploadPhoto struct {

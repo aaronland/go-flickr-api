@@ -78,7 +78,7 @@ func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohtt
 			err := opts.Collection.Delete(ctx, cache)
 
 			if err != nil {
-				log.Printf("Failed to delete cache item for %s, err\n", cache.Token, err)
+				log.Printf("Failed to delete cache item for %s, %v\n", cache.Token, err)
 			}
 		}()
 

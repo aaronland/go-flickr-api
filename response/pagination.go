@@ -16,7 +16,7 @@ type Pagination struct {
 	// The number of results, per page, for an API request.
 	PerPage int `json:"perpage"`
 	// The total number of results, across all pages, for an API request.
-	Total int `json:total"`
+	Total int `json:"total"`
 }
 
 // Given an API response try to derive pagination metrics.

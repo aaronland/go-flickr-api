@@ -223,5 +223,4 @@ func CheckTicketWithClient(ctx context.Context, cl Client, ticket *response.Uplo
 		}
 	}
 
-	return 0, nil
 }
