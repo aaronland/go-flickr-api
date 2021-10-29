@@ -1,6 +1,6 @@
 # github.com/aaronland/go-aws-session v0.0.6
 github.com/aaronland/go-aws-session
-# github.com/aaronland/go-http-sanitize v0.0.5
+# github.com/aaronland/go-http-sanitize v0.0.6
 ## explicit
 github.com/aaronland/go-http-sanitize
 # github.com/aaronland/go-http-server v0.0.7
@@ -153,16 +153,16 @@ github.com/sfomuseum/go-flags/multi
 # github.com/sfomuseum/runtimevar v0.0.5
 ## explicit
 github.com/sfomuseum/runtimevar
-# github.com/tidwall/gjson v1.9.1
+# github.com/tidwall/gjson v1.10.2
 ## explicit
 github.com/tidwall/gjson
-# github.com/tidwall/match v1.0.3
+# github.com/tidwall/match v1.1.1
 github.com/tidwall/match
 # github.com/tidwall/pretty v1.2.0
 github.com/tidwall/pretty
 # github.com/whosonfirst/algnhsa v0.1.0
 github.com/whosonfirst/algnhsa
-# github.com/whosonfirst/go-ioutil v1.0.0
+# github.com/whosonfirst/go-ioutil v1.0.1
 ## explicit
 github.com/whosonfirst/go-ioutil
 # github.com/whosonfirst/go-sanitize v0.1.0
