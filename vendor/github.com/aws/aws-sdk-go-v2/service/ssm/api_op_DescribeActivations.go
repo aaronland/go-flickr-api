@@ -14,7 +14,7 @@ import (
 
 // Describes details about the activation, such as the date and time the activation
 // was created, its expiration date, the Identity and Access Management (IAM) role
-// assigned to the instances in the activation, and the number of instances
+// assigned to the managed nodes in the activation, and the number of nodes
 // registered by using this activation.
 func (c *Client) DescribeActivations(ctx context.Context, params *DescribeActivationsInput, optFns ...func(*Options)) (*DescribeActivationsOutput, error) {
 	if params == nil {
@@ -170,12 +170,13 @@ func NewDescribeActivationsPaginator(client DescribeActivationsAPIClient, params
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeActivationsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeActivations page.
@@ -198,7 +199,10 @@ func (p *DescribeActivationsPaginator) NextPage(ctx context.Context, optFns ...f
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

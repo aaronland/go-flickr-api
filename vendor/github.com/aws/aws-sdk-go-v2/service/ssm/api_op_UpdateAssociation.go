@@ -13,14 +13,22 @@ import (
 
 // Updates an association. You can update the association name and version, the
 // document version, schedule, parameters, and Amazon Simple Storage Service
-// (Amazon S3) output. In order to call this API operation, your Identity and
-// Access Management (IAM) user account, group, or role must be configured with
-// permission to call the DescribeAssociation API operation. If you don't have
-// permission to call DescribeAssociation, then you receive the following error: An
-// error occurred (AccessDeniedException) when calling the UpdateAssociation
-// operation: User: isn't authorized to perform: ssm:DescribeAssociation on
-// resource:  When you update an association, the association immediately runs
-// against the specified targets.
+// (Amazon S3) output. When you call UpdateAssociation, the system removes all
+// optional parameters from the request and overwrites the association with null
+// values for those parameters. This is by design. You must specify all optional
+// parameters in the call, even if you are not changing the parameters. This
+// includes the Name parameter. Before calling this API action, we recommend that
+// you call the DescribeAssociation API operation and make a note of all optional
+// parameters required for your UpdateAssociation call. In order to call this API
+// operation, your Identity and Access Management (IAM) user account, group, or
+// role must be configured with permission to call the DescribeAssociation API
+// operation. If you don't have permission to call DescribeAssociation, then you
+// receive the following error: An error occurred (AccessDeniedException) when
+// calling the UpdateAssociation operation: User: <user_arn> isn't authorized to
+// perform: ssm:DescribeAssociation on resource: <resource_arn> When you update an
+// association, the association immediately runs against the specified targets. You
+// can add the ApplyOnlyAtCronInterval parameter to run the association during the
+// next schedule run.
 func (c *Client) UpdateAssociation(ctx context.Context, params *UpdateAssociationInput, optFns ...func(*Options)) (*UpdateAssociationOutput, error) {
 	if params == nil {
 		params = &UpdateAssociationInput{}
@@ -46,8 +54,16 @@ type UpdateAssociationInput struct {
 	// By default, when you update an association, the system runs it immediately after
 	// it is updated and then according to the schedule you specified. Specify this
 	// option if you don't want an association to run immediately after you update it.
-	// This parameter isn't supported for rate expressions. Also, if you specified this
-	// option when you created the association, you can reset it. To do so, specify the
+	// This parameter isn't supported for rate expressions. If you chose this option
+	// when you created an association and later you edit that association or you make
+	// changes to the SSM document on which that association is based (by using the
+	// Documents page in the console), State Manager applies the association at the
+	// next specified cron interval. For example, if you chose the Latest version of an
+	// SSM document when you created an association and you edit the association by
+	// choosing a different document version on the Documents page, State Manager
+	// applies the association at the next specified cron interval if you previously
+	// selected this option. If this option wasn't selected, State Manager immediately
+	// runs the association. You can reset this option. To do so, specify the
 	// no-apply-only-at-cron-interval parameter when you update the association from
 	// the command line. This parameter forces the association to run immediately after
 	// updating it and according to the interval specified.
@@ -61,9 +77,10 @@ type UpdateAssociationInput struct {
 	// request succeeds, either specify $LATEST, or omit this parameter.
 	AssociationVersion *string
 
-	// Specify the target for the association. This target is required for associations
-	// that use an Automation runbook and target resources by using rate controls.
-	// Automation is a capability of Amazon Web Services Systems Manager.
+	// Choose the parameter that will define how your automation will branch out. This
+	// target is required for associations that use an Automation runbook and target
+	// resources by using rate controls. Automation is a capability of Amazon Web
+	// Services Systems Manager.
 	AutomationTargetParameterName *string
 
 	// The names or Amazon Resource Names (ARNs) of the Change Calendar type documents
@@ -76,16 +93,22 @@ type UpdateAssociationInput struct {
 	// The severity level to assign to the association.
 	ComplianceSeverity types.AssociationComplianceSeverity
 
-	// The document version you want update for the association.
+	// The document version you want update for the association. State Manager doesn't
+	// support running associations that use a new version of a document if that
+	// document is shared from another account. State Manager always runs the default
+	// version of a document if shared from another account, even though the Systems
+	// Manager console shows that a new version was processed. If you want to run an
+	// association using a new version of a document shared form another account, you
+	// must set the document version to default.
 	DocumentVersion *string
 
 	// The maximum number of targets allowed to run the association at the same time.
 	// You can specify a number, for example 10, or a percentage of the target set, for
 	// example 10%. The default value is 100%, which means all targets run the
-	// association at the same time. If a new instance starts and attempts to run an
-	// association while Systems Manager is running MaxConcurrency associations, the
+	// association at the same time. If a new managed node starts and attempts to run
+	// an association while Systems Manager is running MaxConcurrency associations, the
 	// association is allowed to run. During the next association interval, the new
-	// instance will process its association within the limit specified for
+	// managed node will process its association within the limit specified for
 	// MaxConcurrency.
 	MaxConcurrency *string
 
@@ -95,7 +118,7 @@ type UpdateAssociationInput struct {
 	// 10%. If you specify 3, for example, the system stops sending requests when the
 	// fourth error is received. If you specify 0, then the system stops sending
 	// requests after the first error is returned. If you run an association on 50
-	// instances and set MaxError to 10%, then the system stops sending the request
+	// managed nodes and set MaxError to 10%, then the system stops sending the request
 	// when the sixth error is received. Executions that are already running an
 	// association when MaxErrors is reached are allowed to complete, but some of these
 	// executions may fail as well. If you need to ensure that there won't be more than
@@ -104,7 +127,7 @@ type UpdateAssociationInput struct {
 	MaxErrors *string
 
 	// The name of the SSM Command document or Automation runbook that contains the
-	// configuration information for the instance. You can specify Amazon Web
+	// configuration information for the managed node. You can specify Amazon Web
 	// Services-predefined documents, documents you created, or a document that is
 	// shared with you from another account. For Systems Manager document (SSM
 	// document) that are shared with you from other Amazon Web Services accounts, you

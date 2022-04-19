@@ -12,7 +12,7 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// The status of the associations for the instance(s).
+// The status of the associations for the managed node(s).
 func (c *Client) DescribeInstanceAssociationsStatus(ctx context.Context, params *DescribeInstanceAssociationsStatusInput, optFns ...func(*Options)) (*DescribeInstanceAssociationsStatusOutput, error) {
 	if params == nil {
 		params = &DescribeInstanceAssociationsStatusInput{}
@@ -30,7 +30,7 @@ func (c *Client) DescribeInstanceAssociationsStatus(ctx context.Context, params 
 
 type DescribeInstanceAssociationsStatusInput struct {
 
-	// The instance IDs for which you want association status information.
+	// The managed node IDs for which you want association status information.
 	//
 	// This member is required.
 	InstanceId *string
@@ -175,12 +175,13 @@ func NewDescribeInstanceAssociationsStatusPaginator(client DescribeInstanceAssoc
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeInstanceAssociationsStatusPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeInstanceAssociationsStatus page.
@@ -203,7 +204,10 @@ func (p *DescribeInstanceAssociationsStatusPaginator) NextPage(ctx context.Conte
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

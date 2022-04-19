@@ -75,6 +75,28 @@ type UpdateMaintenanceWindowTaskInput struct {
 	// This member is required.
 	WindowTaskId *string
 
+	// Indicates whether tasks should continue to run after the cutoff time specified
+	// in the maintenance windows is reached.
+	//
+	// * CONTINUE_TASK: When the cutoff time is
+	// reached, any tasks that are running continue. The default value.
+	//
+	// *
+	// CANCEL_TASK:
+	//
+	// * For Automation, Lambda, Step Functions tasks: When the cutoff
+	// time is reached, any task invocations that are already running continue, but no
+	// new task invocations are started.
+	//
+	// * For Run Command tasks: When the cutoff time
+	// is reached, the system sends a CancelCommand operation that attempts to cancel
+	// the command associated with the task. However, there is no guarantee that the
+	// command will be terminated and the underlying process stopped.
+	//
+	// The status for
+	// tasks that are not completed is TIMED_OUT.
+	CutoffBehavior types.MaintenanceWindowTaskCutoffBehavior
+
 	// The new task description to specify.
 	Description *string
 
@@ -87,19 +109,25 @@ type UpdateMaintenanceWindowTaskInput struct {
 	LoggingInfo *types.LoggingInfo
 
 	// The new MaxConcurrency value you want to specify. MaxConcurrency is the number
-	// of targets that are allowed to run this task in parallel. For maintenance window
-	// tasks without a target specified, you can't supply a value for this option.
-	// Instead, the system inserts a placeholder value of 1, which may be reported in
-	// the response to this command. This value doesn't affect the running of your task
-	// and can be ignored.
+	// of targets that are allowed to run this task, in parallel. Although this element
+	// is listed as "Required: No", a value can be omitted only when you are
+	// registering or updating a targetless task
+	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/maintenance-windows-targetless-tasks.html)
+	// You must provide a value in all other cases. For maintenance window tasks
+	// without a target specified, you can't supply a value for this option. Instead,
+	// the system inserts a placeholder value of 1. This value doesn't affect the
+	// running of your task.
 	MaxConcurrency *string
 
 	// The new MaxErrors value to specify. MaxErrors is the maximum number of errors
-	// that are allowed before the task stops being scheduled. For maintenance window
-	// tasks without a target specified, you can't supply a value for this option.
-	// Instead, the system inserts a placeholder value of 1, which may be reported in
-	// the response to this command. This value doesn't affect the running of your task
-	// and can be ignored.
+	// that are allowed before the task stops being scheduled. Although this element is
+	// listed as "Required: No", a value can be omitted only when you are registering
+	// or updating a targetless task
+	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/maintenance-windows-targetless-tasks.html)
+	// You must provide a value in all other cases. For maintenance window tasks
+	// without a target specified, you can't supply a value for this option. Instead,
+	// the system inserts a placeholder value of 1. This value doesn't affect the
+	// running of your task.
 	MaxErrors *string
 
 	// The new task name to specify.
@@ -131,13 +159,14 @@ type UpdateMaintenanceWindowTaskInput struct {
 	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
 	ServiceRoleArn *string
 
-	// The targets (either instances or tags) to modify. Instances are specified using
-	// the format Key=instanceids,Values=instanceID_1,instanceID_2. Tags are specified
-	// using the format  Key=tag_name,Values=tag_value. One or more targets must be
-	// specified for maintenance window Run Command-type tasks. Depending on the task,
-	// targets are optional for other maintenance window task types (Automation,
-	// Lambda, and Step Functions). For more information about running tasks that don't
-	// specify targets, see Registering maintenance window tasks without targets
+	// The targets (either managed nodes or tags) to modify. Managed nodes are
+	// specified using the format Key=instanceids,Values=instanceID_1,instanceID_2.
+	// Tags are specified using the format  Key=tag_name,Values=tag_value. One or more
+	// targets must be specified for maintenance window Run Command-type tasks.
+	// Depending on the task, targets are optional for other maintenance window task
+	// types (Automation, Lambda, and Step Functions). For more information about
+	// running tasks that don't specify targets, see Registering maintenance window
+	// tasks without targets
 	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/maintenance-windows-targetless-tasks.html)
 	// in the Amazon Web Services Systems Manager User Guide.
 	Targets []types.Target
@@ -170,6 +199,10 @@ type UpdateMaintenanceWindowTaskInput struct {
 }
 
 type UpdateMaintenanceWindowTaskOutput struct {
+
+	// The specification for whether tasks should continue to run after the cutoff time
+	// specified in the maintenance windows is reached.
+	CutoffBehavior types.MaintenanceWindowTaskCutoffBehavior
 
 	// The updated task description.
 	Description *string

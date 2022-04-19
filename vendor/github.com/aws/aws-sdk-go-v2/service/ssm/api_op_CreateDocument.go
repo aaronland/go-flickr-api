@@ -12,7 +12,7 @@ import (
 )
 
 // Creates a Amazon Web Services Systems Manager (SSM document). An SSM document
-// defines the actions that Systems Manager performs on your managed instances. For
+// defines the actions that Systems Manager performs on your managed nodes. For
 // more information about SSM documents, including information about supported
 // schemas, features, and syntax, see Amazon Web Services Systems Manager Documents
 // (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-ssm-docs.html)
@@ -79,7 +79,8 @@ type CreateDocumentInput struct {
 	// YAML, or TEXT. JSON is the default format.
 	DocumentFormat types.DocumentFormat
 
-	// The type of document to create.
+	// The type of document to create. The DeploymentStrategy document type is an
+	// internal-use-only document type reserved for AppConfig.
 	DocumentType types.DocumentType
 
 	// A list of SSM documents required by a document. This parameter is used

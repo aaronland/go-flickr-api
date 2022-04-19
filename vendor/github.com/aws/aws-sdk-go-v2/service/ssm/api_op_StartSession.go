@@ -10,7 +10,7 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Initiates a connection to a target (for example, an instance) for a Session
+// Initiates a connection to a target (for example, a managed node) for a Session
 // Manager session. Returns a URL and token that can be used to open a WebSocket
 // connection for sending input and receiving outputs. Amazon Web Services CLI
 // usage: start-session is an interactive command that requires the Session Manager
@@ -37,7 +37,7 @@ func (c *Client) StartSession(ctx context.Context, params *StartSessionInput, op
 
 type StartSessionInput struct {
 
-	// The instance to connect to for the session.
+	// The managed node to connect to for the session.
 	//
 	// This member is required.
 	Target *string
@@ -45,12 +45,17 @@ type StartSessionInput struct {
 	// The name of the SSM document to define the parameters and plugin settings for
 	// the session. For example, SSM-SessionManagerRunShell. You can call the
 	// GetDocument API to verify the document exists before attempting to start a
-	// session. If no document name is provided, a shell to the instance is launched by
-	// default.
+	// session. If no document name is provided, a shell to the managed node is
+	// launched by default.
 	DocumentName *string
 
-	// Reserved for future use.
+	// The values you want to specify for the parameters defined in the Session
+	// document.
 	Parameters map[string][]string
+
+	// The reason for connecting to the instance. This value is included in the details
+	// for the Amazon CloudWatch Events event created when you start the session.
+	Reason *string
 
 	noSmithyDocumentSerde
 }
@@ -60,8 +65,8 @@ type StartSessionOutput struct {
 	// The ID of the session.
 	SessionId *string
 
-	// A URL back to SSM Agent on the instance that the Session Manager client uses to
-	// send commands and receive output from the instance. Format:
+	// A URL back to SSM Agent on the managed node that the Session Manager client uses
+	// to send commands and receive output from the node. Format:
 	// wss://ssmmessages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output)
 	// region represents the Region identifier for an Amazon Web Services Region
 	// supported by Amazon Web Services Systems Manager, such as us-east-2 for the US
@@ -73,7 +78,7 @@ type StartSessionOutput struct {
 	StreamUrl *string
 
 	// An encrypted token value containing session and caller information. Used to
-	// authenticate the connection to the instance.
+	// authenticate the connection to the managed node.
 	TokenValue *string
 
 	// Metadata pertaining to the operation's result.

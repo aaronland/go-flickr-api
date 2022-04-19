@@ -12,8 +12,8 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Retrieves information about the maintenance window targets or tasks that an
-// instance is associated with.
+// Retrieves information about the maintenance window targets or tasks that a
+// managed node is associated with.
 func (c *Client) DescribeMaintenanceWindowsForTarget(ctx context.Context, params *DescribeMaintenanceWindowsForTargetInput, optFns ...func(*Options)) (*DescribeMaintenanceWindowsForTargetOutput, error) {
 	if params == nil {
 		params = &DescribeMaintenanceWindowsForTargetInput{}
@@ -37,7 +37,7 @@ type DescribeMaintenanceWindowsForTargetInput struct {
 	// This member is required.
 	ResourceType types.MaintenanceWindowResourceType
 
-	// The instance ID or key-value pair to retrieve information about.
+	// The managed node ID or key-value pair to retrieve information about.
 	//
 	// This member is required.
 	Targets []types.Target
@@ -59,7 +59,7 @@ type DescribeMaintenanceWindowsForTargetOutput struct {
 	// call.)
 	NextToken *string
 
-	// Information about the maintenance window targets and tasks an instance is
+	// Information about the maintenance window targets and tasks a managed node is
 	// associated with.
 	WindowIdentities []types.MaintenanceWindowIdentityForTarget
 
@@ -183,12 +183,13 @@ func NewDescribeMaintenanceWindowsForTargetPaginator(client DescribeMaintenanceW
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeMaintenanceWindowsForTargetPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeMaintenanceWindowsForTarget page.
@@ -211,7 +212,10 @@ func (p *DescribeMaintenanceWindowsForTargetPaginator) NextPage(ctx context.Cont
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

@@ -11,11 +11,12 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Lists the tasks in a maintenance window. For maintenance window tasks without a
-// specified target, you can't supply values for --max-errors and
+// Retrieves the details of a maintenance window task. For maintenance window tasks
+// without a specified target, you can't supply values for --max-errors and
 // --max-concurrency. Instead, the system inserts a placeholder value of 1, which
 // may be reported in the response to this command. These values don't affect the
-// running of your task and can be ignored.
+// running of your task and can be ignored. To retrieve a list of tasks in a
+// maintenance window, instead use the DescribeMaintenanceWindowTasks command.
 func (c *Client) GetMaintenanceWindowTask(ctx context.Context, params *GetMaintenanceWindowTaskInput, optFns ...func(*Options)) (*GetMaintenanceWindowTaskOutput, error) {
 	if params == nil {
 		params = &GetMaintenanceWindowTaskInput{}
@@ -47,6 +48,14 @@ type GetMaintenanceWindowTaskInput struct {
 }
 
 type GetMaintenanceWindowTaskOutput struct {
+
+	// The action to take on tasks when the maintenance window cutoff time is reached.
+	// CONTINUE_TASK means that tasks continue to run. For Automation, Lambda, Step
+	// Functions tasks, CANCEL_TASK means that currently running task invocations
+	// continue, but no new task invocations are started. For Run Command tasks,
+	// CANCEL_TASK means the system attempts to stop the task by sending a
+	// CancelCommand operation.
+	CutoffBehavior types.MaintenanceWindowTaskCutoffBehavior
 
 	// The retrieved task description.
 	Description *string

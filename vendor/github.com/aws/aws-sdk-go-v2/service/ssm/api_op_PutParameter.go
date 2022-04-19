@@ -59,11 +59,11 @@ type PutParameterInput struct {
 	// Creating Systems Manager parameters
 	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-su-create.html)
 	// in the Amazon Web Services Systems Manager User Guide. The maximum length
-	// constraint listed below includes capacity for additional system attributes that
-	// aren't part of the name. The maximum length for a parameter name, including the
-	// full length of the parameter ARN, is 1011 characters. For example, the length of
-	// the following parameter name is 65 characters, not 20 characters:
-	// arn:aws:ssm:us-east-2:111122223333:parameter/ExampleParameterName
+	// constraint of 2048 characters listed below includes 1037 characters reserved for
+	// internal use by Systems Manager. The maximum length for a parameter name that
+	// you create is 1011 characters. This includes the characters in the ARN that
+	// precede the name you specify, such as
+	// arn:aws:ssm:us-east-2:111122223333:parameter/.
 	//
 	// This member is required.
 	Name *string
@@ -89,12 +89,14 @@ type PutParameterInput struct {
 	//
 	// * aws:ec2:image
 	//
-	// When you create a String parameter and
-	// specify aws:ec2:image, Amazon Web Services Systems Manager validates the
-	// parameter value is in the required format, such as ami-12345abcdeEXAMPLE, and
-	// that the specified AMI is available in your Amazon Web Services account. For
-	// more information, see Native parameter support for Amazon Machine Image (AMI)
-	// IDs
+	// * aws:ssm:integration
+	//
+	// When you create a
+	// String parameter and specify aws:ec2:image, Amazon Web Services Systems Manager
+	// validates the parameter value is in the required format, such as
+	// ami-12345abcdeEXAMPLE, and that the specified AMI is available in your Amazon
+	// Web Services account. For more information, see Native parameter support for
+	// Amazon Machine Image (AMI) IDs
 	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html)
 	// in the Amazon Web Services Systems Manager User Guide.
 	DataType *string
@@ -128,15 +130,15 @@ type PutParameterInput struct {
 	// update the expiration date and time by updating the policy. Updating the
 	// parameter doesn't affect the expiration date and time. When the expiration time
 	// is reached, Parameter Store deletes the parameter. ExpirationNotification: This
-	// policy triggers an event in Amazon CloudWatch Events that notifies you about the
-	// expiration. By using this policy, you can receive notification before or after
-	// the expiration time is reached, in units of days or hours. NoChangeNotification:
-	// This policy triggers a CloudWatch Events event if a parameter hasn't been
-	// modified for a specified period of time. This policy type is useful when, for
-	// example, a secret needs to be changed within a period of time, but it hasn't
-	// been changed. All existing policies are preserved until you send new policies or
-	// an empty policy. For more information about parameter policies, see Assigning
-	// parameter policies
+	// policy initiates an event in Amazon CloudWatch Events that notifies you about
+	// the expiration. By using this policy, you can receive notification before or
+	// after the expiration time is reached, in units of days or hours.
+	// NoChangeNotification: This policy initiates a CloudWatch Events event if a
+	// parameter hasn't been modified for a specified period of time. This policy type
+	// is useful when, for example, a secret needs to be changed within a period of
+	// time, but it hasn't been changed. All existing policies are preserved until you
+	// send new policies or an empty policy. For more information about parameter
+	// policies, see Assigning parameter policies
 	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-policies.html).
 	Policies *string
 

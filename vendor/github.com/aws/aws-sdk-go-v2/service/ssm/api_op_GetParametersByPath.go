@@ -38,10 +38,10 @@ func (c *Client) GetParametersByPath(ctx context.Context, params *GetParametersB
 type GetParametersByPathInput struct {
 
 	// The hierarchy for the parameter. Hierarchies start with a forward slash (/). The
-	// hierachy is the parameter name except the last part of the parameter. For the
-	// API call to succeeed, the last part of the parameter name can't be in the path.
-	// A parameter name hierarchy can have a maximum of 15 levels. Here is an example
-	// of a hierarchy: /Finance/Prod/IAD/WinServ2016/license33
+	// hierarchy is the parameter name except the last part of the parameter. For the
+	// API call to succeed, the last part of the parameter name can't be in the path. A
+	// parameter name hierarchy can have a maximum of 15 levels. Here is an example of
+	// a hierarchy: /Finance/Prod/IAD/WinServ2016/license33
 	//
 	// This member is required.
 	Path *string
@@ -53,9 +53,9 @@ type GetParametersByPathInput struct {
 	// A token to start the list. Use this token to get the next set of results.
 	NextToken *string
 
-	// Filters to limit the request results. For GetParametersByPath, the following
-	// filter Key names are supported: Type, KeyId, Label, and DataType. The following
-	// Key values are not supported for GetParametersByPath: tag, Name, Path, and Tier.
+	// Filters to limit the request results. The following Key values are supported for
+	// GetParametersByPath: Type, KeyId, and Label. The following Key values aren't
+	// supported for GetParametersByPath: tag, DataType, Name, Path, and Tier.
 	ParameterFilters []types.ParameterStringFilter
 
 	// Retrieve all parameters within a hierarchy. If a user has access to a path, then
@@ -198,12 +198,13 @@ func NewGetParametersByPathPaginator(client GetParametersByPathAPIClient, params
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *GetParametersByPathPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next GetParametersByPath page.
@@ -226,7 +227,10 @@ func (p *GetParametersByPathPaginator) NextPage(ctx context.Context, optFns ...f
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

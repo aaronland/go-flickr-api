@@ -12,8 +12,8 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Query inventory information. This includes instance status, such as Stopped or
-// Terminated.
+// Query inventory information. This includes managed node status, such as Stopped
+// or Terminated.
 func (c *Client) GetInventory(ctx context.Context, params *GetInventoryInput, optFns ...func(*Options)) (*GetInventoryOutput, error) {
 	if params == nil {
 		params = &GetInventoryInput{}
@@ -34,7 +34,7 @@ type GetInventoryInput struct {
 	// Returns counts of inventory types based on one or more expressions. For example,
 	// if you aggregate by using an expression that uses the
 	// AWS:InstanceInformation.PlatformType type, you can see a count of how many
-	// Windows and Linux instances exist in your inventoried fleet.
+	// Windows and Linux managed nodes exist in your inventoried fleet.
 	Aggregators []types.InventoryAggregator
 
 	// One or more filters. Use a filter to return a more specific list of results.
@@ -56,7 +56,7 @@ type GetInventoryInput struct {
 
 type GetInventoryOutput struct {
 
-	// Collection of inventory entities such as a collection of instance inventory.
+	// Collection of inventory entities such as a collection of managed node inventory.
 	Entities []types.InventoryResultEntity
 
 	// The token to use when requesting the next set of items. If there are no
@@ -179,12 +179,13 @@ func NewGetInventoryPaginator(client GetInventoryAPIClient, params *GetInventory
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *GetInventoryPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next GetInventory page.
@@ -207,7 +208,10 @@ func (p *GetInventoryPaginator) NextPage(ctx context.Context, optFns ...func(*Op
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

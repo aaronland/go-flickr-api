@@ -12,8 +12,8 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Retrieves information about the patches on the specified instance and their
-// state relative to the patch baseline being used for the instance.
+// Retrieves information about the patches on the specified managed node and their
+// state relative to the patch baseline being used for the node.
 func (c *Client) DescribeInstancePatches(ctx context.Context, params *DescribeInstancePatchesInput, optFns ...func(*Options)) (*DescribeInstancePatchesOutput, error) {
 	if params == nil {
 		params = &DescribeInstancePatchesInput{}
@@ -31,7 +31,7 @@ func (c *Client) DescribeInstancePatches(ctx context.Context, params *DescribeIn
 
 type DescribeInstancePatchesInput struct {
 
-	// The ID of the instance whose patch state information should be retrieved.
+	// The ID of the managed node whose patch state information should be retrieved.
 	//
 	// This member is required.
 	InstanceId *string
@@ -204,12 +204,13 @@ func NewDescribeInstancePatchesPaginator(client DescribeInstancePatchesAPIClient
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeInstancePatchesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeInstancePatches page.
@@ -232,7 +233,10 @@ func (p *DescribeInstancePatchesPaginator) NextPage(ctx context.Context, optFns 
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

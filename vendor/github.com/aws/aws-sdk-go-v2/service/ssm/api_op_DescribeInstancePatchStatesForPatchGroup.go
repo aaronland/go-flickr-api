@@ -12,8 +12,8 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Retrieves the high-level patch state for the instances in the specified patch
-// group.
+// Retrieves the high-level patch state for the managed nodes in the specified
+// patch group.
 func (c *Client) DescribeInstancePatchStatesForPatchGroup(ctx context.Context, params *DescribeInstancePatchStatesForPatchGroupInput, optFns ...func(*Options)) (*DescribeInstancePatchStatesForPatchGroupOutput, error) {
 	if params == nil {
 		params = &DescribeInstancePatchStatesForPatchGroupInput{}
@@ -60,7 +60,7 @@ type DescribeInstancePatchStatesForPatchGroupInput struct {
 
 type DescribeInstancePatchStatesForPatchGroupOutput struct {
 
-	// The high-level patch state for the requested instances.
+	// The high-level patch state for the requested managed nodes.
 	InstancePatchStates []types.InstancePatchState
 
 	// The token to use when requesting the next set of items. If there are no
@@ -186,12 +186,13 @@ func NewDescribeInstancePatchStatesForPatchGroupPaginator(client DescribeInstanc
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeInstancePatchStatesForPatchGroupPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeInstancePatchStatesForPatchGroup page.
@@ -214,7 +215,10 @@ func (p *DescribeInstancePatchStatesForPatchGroupPaginator) NextPage(ctx context
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

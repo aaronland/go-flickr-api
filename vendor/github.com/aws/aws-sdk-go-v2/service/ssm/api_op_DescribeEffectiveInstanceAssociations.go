@@ -12,7 +12,7 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// All associations for the instance(s).
+// All associations for the managed node(s).
 func (c *Client) DescribeEffectiveInstanceAssociations(ctx context.Context, params *DescribeEffectiveInstanceAssociationsInput, optFns ...func(*Options)) (*DescribeEffectiveInstanceAssociationsOutput, error) {
 	if params == nil {
 		params = &DescribeEffectiveInstanceAssociationsInput{}
@@ -30,7 +30,7 @@ func (c *Client) DescribeEffectiveInstanceAssociations(ctx context.Context, para
 
 type DescribeEffectiveInstanceAssociationsInput struct {
 
-	// The instance ID for which you want to view all associations.
+	// The managed node ID for which you want to view all associations.
 	//
 	// This member is required.
 	InstanceId *string
@@ -48,7 +48,7 @@ type DescribeEffectiveInstanceAssociationsInput struct {
 
 type DescribeEffectiveInstanceAssociationsOutput struct {
 
-	// The associations for the requested instance.
+	// The associations for the requested managed node.
 	Associations []types.InstanceAssociation
 
 	// The token to use when requesting the next set of items. If there are no
@@ -175,12 +175,13 @@ func NewDescribeEffectiveInstanceAssociationsPaginator(client DescribeEffectiveI
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeEffectiveInstanceAssociationsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeEffectiveInstanceAssociations page.
@@ -203,7 +204,10 @@ func (p *DescribeEffectiveInstanceAssociationsPaginator) NextPage(ctx context.Co
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

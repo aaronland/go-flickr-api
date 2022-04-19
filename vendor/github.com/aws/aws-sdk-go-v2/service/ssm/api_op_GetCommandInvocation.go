@@ -4,6 +4,7 @@ package ssm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
@@ -18,9 +19,9 @@ import (
 
 // Returns detailed information about command execution for an invocation or
 // plugin. GetCommandInvocation only gives the execution status of a plugin in a
-// document. To get the command execution status on a specific instance, use
-// ListCommandInvocations. To get the command execution status across instances,
-// use ListCommands.
+// document. To get the command execution status on a specific managed node, use
+// ListCommandInvocations. To get the command execution status across managed
+// nodes, use ListCommands.
 func (c *Client) GetCommandInvocation(ctx context.Context, params *GetCommandInvocationInput, optFns ...func(*Options)) (*GetCommandInvocationOutput, error) {
 	if params == nil {
 		params = &GetCommandInvocationInput{}
@@ -43,10 +44,10 @@ type GetCommandInvocationInput struct {
 	// This member is required.
 	CommandId *string
 
-	// (Required) The ID of the managed instance targeted by the command. A managed
-	// instance can be an Amazon Elastic Compute Cloud (Amazon EC2) instance or an
-	// instance in your hybrid environment that is configured for Amazon Web Services
-	// Systems Manager.
+	// (Required) The ID of the managed node targeted by the command. A managed node
+	// can be an Amazon Elastic Compute Cloud (Amazon EC2) instance, edge device, and
+	// on-premises server or VM in your hybrid environment that is configured for
+	// Amazon Web Services Systems Manager.
 	//
 	// This member is required.
 	InstanceId *string
@@ -100,9 +101,10 @@ type GetCommandInvocationOutput struct {
 	// the plugin hasn't started to run, the string is empty.
 	ExecutionStartDateTime *string
 
-	// The ID of the managed instance targeted by the command. A managed instance can
-	// be an EC2 instance or an instance in your hybrid environment that is configured
-	// for Systems Manager.
+	// The ID of the managed node targeted by the command. A managed node can be an
+	// Amazon Elastic Compute Cloud (Amazon EC2) instance, edge device, or on-premises
+	// server or VM in your hybrid environment that is configured for Amazon Web
+	// Services Systems Manager.
 	InstanceId *string
 
 	// The name of the plugin, or step name, for which details are reported. For
@@ -110,8 +112,8 @@ type GetCommandInvocationOutput struct {
 	PluginName *string
 
 	// The error level response code for the plugin script. If the response code is -1,
-	// then the command hasn't started running on the instance, or it wasn't received
-	// by the instance.
+	// then the command hasn't started running on the managed node, or it wasn't
+	// received by the node.
 	ResponseCode int32
 
 	// The first 8,000 characters written by the plugin to stderr. If the command
@@ -145,50 +147,50 @@ type GetCommandInvocationOutput struct {
 	// in the Amazon Web Services Systems Manager User Guide. StatusDetails can be one
 	// of the following values:
 	//
-	// * Pending: The command hasn't been sent to the
-	// instance.
+	// * Pending: The command hasn't been sent to the managed
+	// node.
 	//
-	// * In Progress: The command has been sent to the instance but hasn't
+	// * In Progress: The command has been sent to the managed node but hasn't
 	// reached a terminal state.
 	//
 	// * Delayed: The system attempted to send the command
-	// to the target, but the target wasn't available. The instance might not be
-	// available because of network issues, because the instance was stopped, or for
+	// to the target, but the target wasn't available. The managed node might not be
+	// available because of network issues, because the node was stopped, or for
 	// similar reasons. The system will try to send the command again.
 	//
 	// * Success: The
 	// command or plugin ran successfully. This is a terminal state.
 	//
 	// * Delivery Timed
-	// Out: The command wasn't delivered to the instance before the delivery timeout
-	// expired. Delivery timeouts don't count against the parent command's MaxErrors
-	// limit, but they do contribute to whether the parent command status is Success or
-	// Incomplete. This is a terminal state.
+	// Out: The command wasn't delivered to the managed node before the delivery
+	// timeout expired. Delivery timeouts don't count against the parent command's
+	// MaxErrors limit, but they do contribute to whether the parent command status is
+	// Success or Incomplete. This is a terminal state.
 	//
-	// * Execution Timed Out: The command
-	// started to run on the instance, but the execution wasn't complete before the
-	// timeout expired. Execution timeouts count against the MaxErrors limit of the
-	// parent command. This is a terminal state.
+	// * Execution Timed Out: The
+	// command started to run on the managed node, but the execution wasn't complete
+	// before the timeout expired. Execution timeouts count against the MaxErrors limit
+	// of the parent command. This is a terminal state.
 	//
-	// * Failed: The command wasn't run
-	// successfully on the instance. For a plugin, this indicates that the result code
-	// wasn't zero. For a command invocation, this indicates that the result code for
-	// one or more plugins wasn't zero. Invocation failures count against the MaxErrors
-	// limit of the parent command. This is a terminal state.
-	//
-	// * Canceled: The command
-	// was terminated before it was completed. This is a terminal state.
+	// * Failed: The command wasn't
+	// run successfully on the managed node. For a plugin, this indicates that the
+	// result code wasn't zero. For a command invocation, this indicates that the
+	// result code for one or more plugins wasn't zero. Invocation failures count
+	// against the MaxErrors limit of the parent command. This is a terminal state.
 	//
 	// *
-	// Undeliverable: The command can't be delivered to the instance. The instance
-	// might not exist or might not be responding. Undeliverable invocations don't
-	// count against the parent command's MaxErrors limit and don't contribute to
-	// whether the parent command status is Success or Incomplete. This is a terminal
-	// state.
+	// Cancelled: The command was terminated before it was completed. This is a
+	// terminal state.
 	//
-	// * Terminated: The parent command exceeded its MaxErrors limit and
-	// subsequent command invocations were canceled by the system. This is a terminal
-	// state.
+	// * Undeliverable: The command can't be delivered to the managed
+	// node. The node might not exist or might not be responding. Undeliverable
+	// invocations don't count against the parent command's MaxErrors limit and don't
+	// contribute to whether the parent command status is Success or Incomplete. This
+	// is a terminal state.
+	//
+	// * Terminated: The parent command exceeded its MaxErrors
+	// limit and subsequent command invocations were canceled by the system. This is a
+	// terminal state.
 	StatusDetails *string
 
 	// Metadata pertaining to the operation's result.
@@ -327,8 +329,17 @@ func NewCommandExecutedWaiter(client GetCommandInvocationAPIClient, optFns ...fu
 // maximum wait duration the waiter will wait. The maxWaitDur is required and must
 // be greater than zero.
 func (w *CommandExecutedWaiter) Wait(ctx context.Context, params *GetCommandInvocationInput, maxWaitDur time.Duration, optFns ...func(*CommandExecutedWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for CommandExecuted waiter and returns
+// the output of the successful operation. The maxWaitDur is the maximum wait
+// duration the waiter will wait. The maxWaitDur is required and must be greater
+// than zero.
+func (w *CommandExecutedWaiter) WaitForOutput(ctx context.Context, params *GetCommandInvocationInput, maxWaitDur time.Duration, optFns ...func(*CommandExecutedWaiterOptions)) (*GetCommandInvocationOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -341,7 +352,7 @@ func (w *CommandExecutedWaiter) Wait(ctx context.Context, params *GetCommandInvo
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -369,10 +380,10 @@ func (w *CommandExecutedWaiter) Wait(ctx context.Context, params *GetCommandInvo
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -385,16 +396,16 @@ func (w *CommandExecutedWaiter) Wait(ctx context.Context, params *GetCommandInvo
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for CommandExecuted waiter")
+	return nil, fmt.Errorf("exceeded max wait time for CommandExecuted waiter")
 }
 
 func commandExecutedStateRetryable(ctx context.Context, input *GetCommandInvocationInput, output *GetCommandInvocationOutput, err error) (bool, error) {
@@ -532,6 +543,13 @@ func commandExecutedStateRetryable(ctx context.Context, input *GetCommandInvocat
 
 		if string(value) == expectedValue {
 			return false, fmt.Errorf("waiter state transitioned to Failure")
+		}
+	}
+
+	if err != nil {
+		var errorType *types.InvocationDoesNotExist
+		if errors.As(err, &errorType) {
+			return true, nil
 		}
 	}
 

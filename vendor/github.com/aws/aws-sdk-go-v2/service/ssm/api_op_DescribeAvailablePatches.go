@@ -31,7 +31,7 @@ func (c *Client) DescribeAvailablePatches(ctx context.Context, params *DescribeA
 type DescribeAvailablePatchesInput struct {
 
 	// Each element in the array is a structure containing a key-value pair. Windows
-	// Server Supported keys for Windows Server instance patches include the
+	// Server Supported keys for Windows Server managed node patches include the
 	// following:
 	//
 	// * PATCH_SET Sample values: OS | APPLICATION
@@ -56,7 +56,7 @@ type DescribeAvailablePatchesInput struct {
 	// (CLI), the following command fails: aws ssm describe-available-patches --filters
 	// Key=CVE_ID,Values=CVE-2018-3615 However, the following command succeeds: aws ssm
 	// describe-available-patches --filters Key=PRODUCT,Values=AmazonLinux2018.03
-	// Key=CVE_ID,Values=CVE-2018-3615 Supported keys for Linux instance patches
+	// Key=CVE_ID,Values=CVE-2018-3615 Supported keys for Linux managed node patches
 	// include the following:
 	//
 	// * PRODUCT Sample values: AmazonLinux2018.03 |
@@ -223,12 +223,13 @@ func NewDescribeAvailablePatchesPaginator(client DescribeAvailablePatchesAPIClie
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeAvailablePatchesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeAvailablePatches page.
@@ -251,7 +252,10 @@ func (p *DescribeAvailablePatchesPaginator) NextPage(ctx context.Context, optFns
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

@@ -37,9 +37,9 @@ type ListCommandsInput struct {
 	// results.
 	Filters []types.CommandFilter
 
-	// (Optional) Lists commands issued against this instance ID. You can't specify an
-	// instance ID in the same command that you specify Status = Pending. This is
-	// because the command hasn't reached the instance yet.
+	// (Optional) Lists commands issued against this managed node ID. You can't specify
+	// a managed node ID in the same command that you specify Status = Pending. This is
+	// because the command hasn't reached the managed node yet.
 	InstanceId *string
 
 	// (Optional) The maximum number of items to return for this call. The call also
@@ -180,12 +180,13 @@ func NewListCommandsPaginator(client ListCommandsAPIClient, params *ListCommands
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *ListCommandsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next ListCommands page.
@@ -208,7 +209,10 @@ func (p *ListCommandsPaginator) NextPage(ctx context.Context, optFns ...func(*Op
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

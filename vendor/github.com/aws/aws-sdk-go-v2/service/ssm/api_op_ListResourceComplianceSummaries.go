@@ -51,10 +51,9 @@ type ListResourceComplianceSummariesOutput struct {
 	// set of results.
 	NextToken *string
 
-	// A summary count for specified or targeted managed instances. Summary count
-	// includes information about compliant and non-compliant State Manager
-	// associations, patch status, or custom items according to the filter criteria
-	// that you specify.
+	// A summary count for specified or targeted managed nodes. Summary count includes
+	// information about compliant and non-compliant State Manager associations, patch
+	// status, or custom items according to the filter criteria that you specify.
 	ResourceComplianceSummaryItems []types.ResourceComplianceSummaryItem
 
 	// Metadata pertaining to the operation's result.
@@ -174,12 +173,13 @@ func NewListResourceComplianceSummariesPaginator(client ListResourceComplianceSu
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *ListResourceComplianceSummariesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next ListResourceComplianceSummaries page.
@@ -202,7 +202,10 @@ func (p *ListResourceComplianceSummariesPaginator) NextPage(ctx context.Context,
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

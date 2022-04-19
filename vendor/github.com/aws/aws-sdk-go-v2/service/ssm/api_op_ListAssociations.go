@@ -14,7 +14,7 @@ import (
 
 // Returns all State Manager associations in the current Amazon Web Services
 // account and Amazon Web Services Region. You can limit the results to a specific
-// State Manager association document or instance by specifying a filter. State
+// State Manager association document or managed node by specifying a filter. State
 // Manager is a capability of Amazon Web Services Systems Manager.
 func (c *Client) ListAssociations(ctx context.Context, params *ListAssociationsInput, optFns ...func(*Options)) (*ListAssociationsOutput, error) {
 	if params == nil {
@@ -36,7 +36,7 @@ type ListAssociationsInput struct {
 	// One or more filters. Use a filter to return a more specific list of results.
 	// Filtering associations using the InstanceID attribute only returns legacy
 	// associations created using the InstanceID attribute. Associations targeting the
-	// instance that are part of the Target Attributes ResourceGroup or Tags aren't
+	// managed node that are part of the Target Attributes ResourceGroup or Tags aren't
 	// returned.
 	AssociationFilterList []types.AssociationFilter
 
@@ -177,12 +177,13 @@ func NewListAssociationsPaginator(client ListAssociationsAPIClient, params *List
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *ListAssociationsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next ListAssociations page.
@@ -205,7 +206,10 @@ func (p *ListAssociationsPaginator) NextPage(ctx context.Context, optFns ...func
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

@@ -601,6 +601,9 @@ func awsAwsjson11_deserializeOpErrorCreateActivation(response *smithyhttp.Respon
 	case strings.EqualFold("InternalServerError", errorCode):
 		return awsAwsjson11_deserializeErrorInternalServerError(response, errorBody)
 
+	case strings.EqualFold("InvalidParameters", errorCode):
+		return awsAwsjson11_deserializeErrorInvalidParameters(response, errorBody)
+
 	default:
 		genericError := &smithy.GenericAPIError{
 			Code:    errorCode,
@@ -14254,9 +14257,6 @@ func awsAwsjson11_deserializeOpErrorTerminateSession(response *smithyhttp.Respon
 	}
 
 	switch {
-	case strings.EqualFold("DoesNotExistException", errorCode):
-		return awsAwsjson11_deserializeErrorDoesNotExistException(response, errorBody)
-
 	case strings.EqualFold("InternalServerError", errorCode):
 		return awsAwsjson11_deserializeErrorInternalServerError(response, errorBody)
 
@@ -23197,6 +23197,78 @@ func awsAwsjson11_deserializeDocumentCalendarNameOrARNList(v *[]string, value in
 	return nil
 }
 
+func awsAwsjson11_deserializeDocumentCategoryEnumList(v *[]string, value interface{}) error {
+	if v == nil {
+		return fmt.Errorf("unexpected nil of type %T", v)
+	}
+	if value == nil {
+		return nil
+	}
+
+	shape, ok := value.([]interface{})
+	if !ok {
+		return fmt.Errorf("unexpected JSON type %v", value)
+	}
+
+	var cv []string
+	if *v == nil {
+		cv = []string{}
+	} else {
+		cv = *v
+	}
+
+	for _, value := range shape {
+		var col string
+		if value != nil {
+			jtv, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("expected Category to be of type string, got %T instead", value)
+			}
+			col = jtv
+		}
+		cv = append(cv, col)
+
+	}
+	*v = cv
+	return nil
+}
+
+func awsAwsjson11_deserializeDocumentCategoryList(v *[]string, value interface{}) error {
+	if v == nil {
+		return fmt.Errorf("unexpected nil of type %T", v)
+	}
+	if value == nil {
+		return nil
+	}
+
+	shape, ok := value.([]interface{})
+	if !ok {
+		return fmt.Errorf("unexpected JSON type %v", value)
+	}
+
+	var cv []string
+	if *v == nil {
+		cv = []string{}
+	} else {
+		cv = *v
+	}
+
+	for _, value := range shape {
+		var col string
+		if value != nil {
+			jtv, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("expected Category to be of type string, got %T instead", value)
+			}
+			col = jtv
+		}
+		cv = append(cv, col)
+
+	}
+	*v = cv
+	return nil
+}
+
 func awsAwsjson11_deserializeDocumentCloudWatchOutputConfig(v **types.CloudWatchOutputConfig, value interface{}) error {
 	if v == nil {
 		return fmt.Errorf("unexpected nil of type %T", v)
@@ -24684,6 +24756,16 @@ func awsAwsjson11_deserializeDocumentDocumentDescription(v **types.DocumentDescr
 					return fmt.Errorf("expected DocumentAuthor to be of type string, got %T instead", value)
 				}
 				sv.Author = ptr.String(jtv)
+			}
+
+		case "Category":
+			if err := awsAwsjson11_deserializeDocumentCategoryList(&sv.Category, value); err != nil {
+				return err
+			}
+
+		case "CategoryEnum":
+			if err := awsAwsjson11_deserializeDocumentCategoryEnumList(&sv.CategoryEnum, value); err != nil {
+				return err
 			}
 
 		case "CreatedDate":
@@ -27060,6 +27142,24 @@ func awsAwsjson11_deserializeDocumentInstanceInformation(v **types.InstanceInfor
 					return fmt.Errorf("expected ResourceType to be of type string, got %T instead", value)
 				}
 				sv.ResourceType = types.ResourceType(jtv)
+			}
+
+		case "SourceId":
+			if value != nil {
+				jtv, ok := value.(string)
+				if !ok {
+					return fmt.Errorf("expected SourceId to be of type string, got %T instead", value)
+				}
+				sv.SourceId = ptr.String(jtv)
+			}
+
+		case "SourceType":
+			if value != nil {
+				jtv, ok := value.(string)
+				if !ok {
+					return fmt.Errorf("expected SourceType to be of type string, got %T instead", value)
+				}
+				sv.SourceType = types.SourceType(jtv)
 			}
 
 		default:
@@ -31453,6 +31553,15 @@ func awsAwsjson11_deserializeDocumentMaintenanceWindowTask(v **types.Maintenance
 
 	for key, value := range shape {
 		switch key {
+		case "CutoffBehavior":
+			if value != nil {
+				jtv, ok := value.(string)
+				if !ok {
+					return fmt.Errorf("expected MaintenanceWindowTaskCutoffBehavior to be of type string, got %T instead", value)
+				}
+				sv.CutoffBehavior = types.MaintenanceWindowTaskCutoffBehavior(jtv)
+			}
+
 		case "Description":
 			if value != nil {
 				jtv, ok := value.(string)
@@ -38291,6 +38400,15 @@ func awsAwsjson11_deserializeDocumentSession(v **types.Session, value interface{
 				}
 			}
 
+		case "MaxSessionDuration":
+			if value != nil {
+				jtv, ok := value.(string)
+				if !ok {
+					return fmt.Errorf("expected MaxSessionDuration to be of type string, got %T instead", value)
+				}
+				sv.MaxSessionDuration = ptr.String(jtv)
+			}
+
 		case "OutputUrl":
 			if err := awsAwsjson11_deserializeDocumentSessionManagerOutputUrl(&sv.OutputUrl, value); err != nil {
 				return err
@@ -38303,6 +38421,15 @@ func awsAwsjson11_deserializeDocumentSession(v **types.Session, value interface{
 					return fmt.Errorf("expected SessionOwner to be of type string, got %T instead", value)
 				}
 				sv.Owner = ptr.String(jtv)
+			}
+
+		case "Reason":
+			if value != nil {
+				jtv, ok := value.(string)
+				if !ok {
+					return fmt.Errorf("expected SessionReason to be of type string, got %T instead", value)
+				}
+				sv.Reason = ptr.String(jtv)
 			}
 
 		case "SessionId":
@@ -43769,6 +43896,15 @@ func awsAwsjson11_deserializeOpDocumentGetMaintenanceWindowTaskOutput(v **GetMai
 
 	for key, value := range shape {
 		switch key {
+		case "CutoffBehavior":
+			if value != nil {
+				jtv, ok := value.(string)
+				if !ok {
+					return fmt.Errorf("expected MaintenanceWindowTaskCutoffBehavior to be of type string, got %T instead", value)
+				}
+				sv.CutoffBehavior = types.MaintenanceWindowTaskCutoffBehavior(jtv)
+			}
+
 		case "Description":
 			if value != nil {
 				jtv, ok := value.(string)
@@ -46493,6 +46629,15 @@ func awsAwsjson11_deserializeOpDocumentUpdateMaintenanceWindowTaskOutput(v **Upd
 
 	for key, value := range shape {
 		switch key {
+		case "CutoffBehavior":
+			if value != nil {
+				jtv, ok := value.(string)
+				if !ok {
+					return fmt.Errorf("expected MaintenanceWindowTaskCutoffBehavior to be of type string, got %T instead", value)
+				}
+				sv.CutoffBehavior = types.MaintenanceWindowTaskCutoffBehavior(jtv)
+			}
+
 		case "Description":
 			if value != nil {
 				jtv, ok := value.(string)

@@ -12,7 +12,7 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Retrieves the high-level patch state of one or more instances.
+// Retrieves the high-level patch state of one or more managed nodes.
 func (c *Client) DescribeInstancePatchStates(ctx context.Context, params *DescribeInstancePatchStatesInput, optFns ...func(*Options)) (*DescribeInstancePatchStatesOutput, error) {
 	if params == nil {
 		params = &DescribeInstancePatchStatesInput{}
@@ -30,12 +30,13 @@ func (c *Client) DescribeInstancePatchStates(ctx context.Context, params *Descri
 
 type DescribeInstancePatchStatesInput struct {
 
-	// The ID of the instance for which patch state information should be retrieved.
+	// The ID of the managed node for which patch state information should be
+	// retrieved.
 	//
 	// This member is required.
 	InstanceIds []string
 
-	// The maximum number of instances to return (per page).
+	// The maximum number of managed nodes to return (per page).
 	MaxResults int32
 
 	// The token for the next set of items to return. (You received this token from a
@@ -47,7 +48,7 @@ type DescribeInstancePatchStatesInput struct {
 
 type DescribeInstancePatchStatesOutput struct {
 
-	// The high-level patch state for the requested instances.
+	// The high-level patch state for the requested managed nodes.
 	InstancePatchStates []types.InstancePatchState
 
 	// The token to use when requesting the next set of items. If there are no
@@ -134,7 +135,7 @@ var _ DescribeInstancePatchStatesAPIClient = (*Client)(nil)
 // DescribeInstancePatchStatesPaginatorOptions is the paginator options for
 // DescribeInstancePatchStates
 type DescribeInstancePatchStatesPaginatorOptions struct {
-	// The maximum number of instances to return (per page).
+	// The maximum number of managed nodes to return (per page).
 	Limit int32
 
 	// Set to true if pagination should stop if the service returns a pagination token
@@ -173,12 +174,13 @@ func NewDescribeInstancePatchStatesPaginator(client DescribeInstancePatchStatesA
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeInstancePatchStatesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeInstancePatchStates page.
@@ -201,7 +203,10 @@ func (p *DescribeInstancePatchStatesPaginator) NextPage(ctx context.Context, opt
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

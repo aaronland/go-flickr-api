@@ -12,7 +12,8 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Lists all related-item resources associated with an OpsItem.
+// Lists all related-item resources associated with a Systems Manager OpsCenter
+// OpsItem. OpsCenter is a capability of Amazon Web Services Systems Manager.
 func (c *Client) ListOpsItemRelatedItems(ctx context.Context, params *ListOpsItemRelatedItemsInput, optFns ...func(*Options)) (*ListOpsItemRelatedItemsOutput, error) {
 	if params == nil {
 		params = &ListOpsItemRelatedItemsInput{}
@@ -176,12 +177,13 @@ func NewListOpsItemRelatedItemsPaginator(client ListOpsItemRelatedItemsAPIClient
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *ListOpsItemRelatedItemsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next ListOpsItemRelatedItems page.
@@ -208,7 +210,10 @@ func (p *ListOpsItemRelatedItemsPaginator) NextPage(ctx context.Context, optFns 
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
