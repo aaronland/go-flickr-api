@@ -23,35 +23,35 @@
 // In any case, absent any stored metadata many blob.Attributes fields
 // will be set to default values.
 //
-// URLs
+// # URLs
 //
 // For blob.OpenBucket, fileblob registers for the scheme "file".
 // To customize the URL opener, or for more details on the URL format,
 // see URLOpener.
 // See https://gocloud.dev/concepts/urls/ for background information.
 //
-// Escaping
+// # Escaping
 //
 // Go CDK supports all UTF-8 strings; to make this work with services lacking
 // full UTF-8 support, strings must be escaped (during writes) and unescaped
 // (during reads). The following escapes are performed for fileblob:
-//  - Blob keys: ASCII characters 0-31 are escaped to "__0x<hex>__".
-//    If os.PathSeparator != "/", it is also escaped.
-//    Additionally, the "/" in "../", the trailing "/" in "//", and a trailing
-//    "/" is key names are escaped in the same way.
-//    On Windows, the characters "<>:"|?*" are also escaped.
+//   - Blob keys: ASCII characters 0-31 are escaped to "__0x<hex>__".
+//     If os.PathSeparator != "/", it is also escaped.
+//     Additionally, the "/" in "../", the trailing "/" in "//", and a trailing
+//     "/" is key names are escaped in the same way.
+//     On Windows, the characters "<>:"|?*" are also escaped.
 //
-// As
+// # As
 //
 // fileblob exposes the following types for As:
-//  - Bucket: os.FileInfo
-//  - Error: *os.PathError
-//  - ListObject: os.FileInfo
-//  - Reader: io.Reader
-//  - ReaderOptions.BeforeRead: *os.File
-//  - Attributes: os.FileInfo
-//  - CopyOptions.BeforeCopy: *os.File
-//  - WriterOptions.BeforeWrite: *os.File
+//   - Bucket: os.FileInfo
+//   - Error: *os.PathError
+//   - ListObject: os.FileInfo
+//   - Reader: io.Reader
+//   - ReaderOptions.BeforeRead: *os.File
+//   - Attributes: os.FileInfo
+//   - CopyOptions.BeforeCopy: *os.File
+//   - WriterOptions.BeforeWrite: *os.File
 package fileblob // import "gocloud.dev/blob/fileblob"
 
 import (
@@ -110,20 +110,20 @@ const Scheme = "file"
 //
 // If either of base_url / secret_key_path are provided, both must be.
 //
-//  - file:///a/directory
-//    -> Passes "/a/directory" to OpenBucket.
-//  - file://localhost/a/directory
-//    -> Also passes "/a/directory".
-//  - file://./../..
-//    -> The hostname is ".", signaling a relative path; passes "../..".
-//  - file:///c:/foo/bar on Windows.
-//    -> Passes "c:\foo\bar".
-//  - file://localhost/c:/foo/bar on Windows.
-//    -> Also passes "c:\foo\bar".
-//  - file:///a/directory?base_url=/show&secret_key_path=secret.key
-//    -> Passes "/a/directory" to OpenBucket, and sets Options.URLSigner
-//       to a URLSignerHMAC initialized with base URL "/show" and secret key
-//       bytes read from the file "secret.key".
+//   - file:///a/directory
+//     -> Passes "/a/directory" to OpenBucket.
+//   - file://localhost/a/directory
+//     -> Also passes "/a/directory".
+//   - file://./../..
+//     -> The hostname is ".", signaling a relative path; passes "../..".
+//   - file:///c:/foo/bar on Windows.
+//     -> Passes "c:\foo\bar".
+//   - file://localhost/c:/foo/bar on Windows.
+//     -> Also passes "c:\foo\bar".
+//   - file:///a/directory?base_url=/show&secret_key_path=secret.key
+//     -> Passes "/a/directory" to OpenBucket, and sets Options.URLSigner
+//     to a URLSignerHMAC initialized with base URL "/show" and secret key
+//     bytes read from the file "secret.key".
 type URLOpener struct {
 	// Options specifies the default options to pass to OpenBucket.
 	Options Options
@@ -642,6 +642,29 @@ func (r *reader) As(i interface{}) bool {
 	return true
 }
 
+func createTemp(path string) (*os.File, error) {
+	// Use a custom createTemp function rather than os.CreateTemp() as
+	// os.CreateTemp() sets the permissions of the tempfile to 0600, rather than
+	// 0666, making it inconsistent with the directories and attribute files.
+	try := 0
+	for {
+		// Append the current time with nanosecond precision and .tmp to the
+		// path. If the file already exists try again. Nanosecond changes enough
+		// between each iteration to make a conflict unlikely. Using the full
+		// time lowers the chance of a collision with a file using a similar
+		// pattern, but has undefined behavior after the year 2262.
+		name := path + "." + strconv.FormatInt(time.Now().UnixNano(), 16) + ".tmp"
+		f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+		if os.IsExist(err) {
+			if try++; try < 10000 {
+				continue
+			}
+			return nil, &os.PathError{Op: "createtemp", Path: path + ".*.tmp", Err: os.ErrExist}
+		}
+		return f, err
+	}
+}
+
 // NewTypedWriter implements driver.NewTypedWriter.
 func (b *bucket) NewTypedWriter(ctx context.Context, key string, contentType string, opts *driver.WriterOptions) (driver.Writer, error) {
 	path, err := b.path(key)
@@ -651,7 +674,7 @@ func (b *bucket) NewTypedWriter(ctx context.Context, key string, contentType str
 	if err := os.MkdirAll(filepath.Dir(path), os.FileMode(0777)); err != nil {
 		return nil, err
 	}
-	f, err := ioutil.TempFile(filepath.Dir(path), "fileblob")
+	f, err := createTemp(path)
 	if err != nil {
 		return nil, err
 	}
