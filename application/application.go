@@ -14,24 +14,27 @@
 // package main
 //
 // import (
-// 	"context"
-// 	"github.com/aaronland/go-flickr-api/application/api"
-// 	_ "gocloud.dev/runtimevar/constantvar"
-// 	_ "gocloud.dev/runtimevar/filevar"
-// 	"log"
+//
+//	"context"
+//	"github.com/aaronland/go-flickr-api/application/api"
+//	_ "gocloud.dev/runtimevar/constantvar"
+//	_ "gocloud.dev/runtimevar/filevar"
+//	"log"
+//
 // )
 //
 // func main() {
 //
-// 	ctx := context.Background()
+//		ctx := context.Background()
 //
-// 	app := &api.APIApplication{}
-// 	_, err := app.Run(ctx)
+//		app := &api.APIApplication{}
+//		_, err := app.Run(ctx)
 //
-// 	if err != nil {
-// 		log.Fatalf("Failed to run upload application, %v", err)
-// 	}
-// }
+//		if err != nil {
+//			log.Fatalf("Failed to run upload application, %v", err)
+//		}
+//	}
+//
 // ```
 //
 // This version of the application supports reading client configuration using the `runtimevar` package's constant:// and file:// schemes. For example:
@@ -46,23 +49,26 @@
 // package main
 //
 // import (
-// 	"context"
-// 	"github.com/aaronland/go-flickr-api/application/api"
-// 	_ "gocloud.dev/runtimevar/awsparamstore"
-// 	"log"
+//
+//	"context"
+//	"github.com/aaronland/go-flickr-api/application/api"
+//	_ "gocloud.dev/runtimevar/awsparamstore"
+//	"log"
+//
 // )
 //
 // func main() {
 //
-// 	ctx := context.Background()
+//		ctx := context.Background()
 //
-// 	app := &api.APIApplication{}
-// 	_, err := app.Run(ctx)
+//		app := &api.APIApplication{}
+//		_, err := app.Run(ctx)
 //
-// 	if err != nil {
-// 		log.Fatalf("Failed to run upload application, %v", err)
-// 	}
-// }
+//		if err != nil {
+//			log.Fatalf("Failed to run upload application, %v", err)
+//		}
+//	}
+//
 // ```
 //
 // And then invoke it like this:
