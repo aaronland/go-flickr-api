@@ -32,9 +32,13 @@ The last form is to account for paths derived from the `fs.ReadDir` method. Spec
 fs.ReadDir("method=flickr.photosets.getPhotos&photoset_id=72157629455113026&user_id=35034348999%40N01")
 ```
 
-This method will return zero or more `fs.DirEntry` instances whose name (path) will be "#" + the fully qualified URL to the photo matching the query. When combined with the directory "root" which is actually a set of query parameters you end up with things like `method=flickr.photosets.getPhotos&photoset_id=72157629455113026&user_id=35034348999%40N01/#/7244/7071114647_b8bcd16b65_o.jpg` which is not ideal but easy enough to account for (which the `Open` and `ReadFile` methods do automatically.
+This method will return zero or more `fs.DirEntry` instances whose name (path) will be "#" + the fully qualified URL to the photo matching the query. When combined with the directory "root" which is actually a set of query parameters you end up with things like:
 
-All of the [tests](fs_test.go) pass but there may still be "gotchas" or other edge cases.
+```
+method=flickr.photosets.getPhotos&photoset_id=72157629455113026&user_id=35034348999%40N01/#/7244/7071114647_b8bcd16b65_o.jpg
+```
+
+Which is not ideal but easy enough to account for (which the `Open` and `ReadFile` methods do automatically. All of the [tests](fs_test.go) pass but there may still be "gotchas" or other edge cases.
 
 ## Example
 
