@@ -1,13 +1,15 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"io/fs"
+	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/aaronland/go-flickr-api/client"
@@ -16,13 +18,17 @@ import (
 
 type FS struct {
 	fs.FS
-	client client.Client
+	http_client *http.Client
+	client      client.Client
 }
 
 func NewFS(ctx context.Context, cl client.Client) *FS {
 
+	http_cl := &http.Client{}
+
 	fs := &FS{
-		client: cl,
+		http_client: http_cl,
+		client:      cl,
 	}
 
 	return fs
@@ -61,6 +67,18 @@ func (f *FS) Open(name string) (fs.File, error) {
 		return nil, fmt.Errorf("Missing photo.secret")
 	}
 
+	originalsecret_rsp := gjson.GetBytes(body, "photo.originalsecret")
+
+	if !originalsecret_rsp.Exists() {
+		return nil, fmt.Errorf("Missing photo.originalsecret")
+	}
+
+	originalformat_rsp := gjson.GetBytes(body, "photo.originalformat")
+
+	if !originalformat_rsp.Exists() {
+		return nil, fmt.Errorf("Missing photo.originalformat")
+	}
+
 	server_rsp := gjson.GetBytes(body, "photo.server")
 
 	if !server_rsp.Exists() {
@@ -82,18 +100,53 @@ func (f *FS) Open(name string) (fs.File, error) {
 	}
 
 	id := id_rsp.Int()
-	secret := secret_rsp.String()
+	// secret := secret_rsp.String()
+	originalsecret := originalsecret_rsp.String()
+	originalformat := originalformat_rsp.String()
+	server := server_rsp.String()
+	lastmod := lastmod_rsp.Int()
 
-	fmt.Println(string(body))
-	return nil, nil
+	url := fmt.Sprintf("https://live.staticflickr.com/%s/%d_%s_o.%s", server, id, originalsecret, originalformat)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rsp, err := f.http_client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if rsp.StatusCode != http.StatusOK {
+		defer rsp.Body.Close()
+		return nil, fmt.Errorf("%d %s", rsp.StatusCode, rsp.Status)
+	}
+
+	str_len := rsp.Header.Get("Content-Length")
+	int_len, _ := strconv.ParseInt(str_len, 10, 64)
+
+	t := time.Unix(lastmod, 0)
+
+	fl := File{
+		name:           filepath.Base(url),
+		content:        rsp.Body,
+		content_length: int_len,
+		modTime:        t,
+	}
+
+	return fl, nil
 }
 
 type File struct {
-	name    string
-	perm    os.FileMode
-	content *bytes.Buffer
-	modTime time.Time
-	closed  bool
+	name           string
+	perm           os.FileMode
+	content        io.ReadCloser
+	content_length int64
+	modTime        time.Time
+	closed         bool
 }
 
 func (f *File) Stat() (fs.FileInfo, error) {
@@ -102,7 +155,7 @@ func (f *File) Stat() (fs.FileInfo, error) {
 	}
 	fi := fileInfo{
 		name:    f.name,
-		size:    int64(f.content.Len()),
+		size:    f.content_length,
 		modTime: f.modTime,
 		mode:    f.perm,
 	}
@@ -120,6 +173,12 @@ func (f *File) Close() error {
 	if f.closed {
 		return fs.ErrClosed
 	}
+	err := f.content.Close()
+
+	if err != nil {
+		return err
+	}
+
 	f.closed = true
 	return nil
 }
