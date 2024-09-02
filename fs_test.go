@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"flag"
+	"image"
+	_ "image/jpeg"
 	"testing"
 
 	"github.com/aaronland/go-flickr-api/client"
@@ -23,12 +25,18 @@ func TestFS(t *testing.T) {
 		t.Fatalf("Failed to create new client, %v", err)
 	}
 
-	f := NewFS(ctx, cl)
+	fs := NewFS(ctx, cl)
 
-	_, err = f.Open("53961664838")
+	fl, err := fs.Open("53961664838")
 
 	if err != nil {
 		t.Fatalf("Failed to open , %v", err)
+	}
+
+	_, _, err = image.Decode(fl)
+
+	if err != nil {
+		t.Fatalf("Failed to decode image, %v", err)
 	}
 
 }

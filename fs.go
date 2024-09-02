@@ -130,7 +130,7 @@ func (f *FS) Open(name string) (fs.File, error) {
 
 	t := time.Unix(lastmod, 0)
 
-	fl := File{
+	fl := &File{
 		name:           filepath.Base(url),
 		content:        rsp.Body,
 		content_length: int_len,
