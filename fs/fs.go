@@ -5,15 +5,22 @@ import (
 	"fmt"
 	"io"
 	io_fs "io/fs"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"regexp"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/tidwall/gjson"
 )
+
+var re_photo = regexp.MustCompile(`^(?:\d+|\d+\/\d+_\w+_[a-z]\.\w+)$`)
+var re_url = regexp.MustCompile(`^\d+\/\d+_\w+_[a-z]\.\w+$`)
 
 type apiFS struct {
 	io_fs.FS
@@ -35,75 +42,115 @@ func New(ctx context.Context, cl client.Client) io_fs.FS {
 
 func (f *apiFS) Open(name string) (io_fs.File, error) {
 
-	args := &url.Values{}
-	args.Set("method", "flickr.photos.getInfo")
-	args.Set("photo_id", name)
-
 	ctx := context.Background()
-	r, err := f.client.ExecuteMethod(ctx, args)
+
+	logger := slog.Default()
+	logger = logger.With("name", name)
+
+	if !re_photo.MatchString(name) {
+
+		logger.Debug("File does not match photo ID or URL, assuming SPR entry")
+
+		fl := &apiFile{
+			name:           name,
+			content_length: -1,
+			modTime:        time.Now(),
+			is_spr:         true,
+		}
+
+		return fl, nil
+	}
+
+	var path string
+
+	if re_url.MatchString(name) {
+		path = name
+	} else {
+
+		args := &url.Values{}
+		args.Set("method", "flickr.photos.getInfo")
+		args.Set("photo_id", name)
+
+		logger.Debug("Get photo info", "query", args.Encode())
+
+		r, err := f.client.ExecuteMethod(ctx, args)
+
+		if err != nil {
+			return nil, fmt.Errorf("Failed to execute API method, %w", err)
+		}
+
+		defer r.Close()
+
+		body, err := io.ReadAll(r)
+
+		if err != nil {
+			return nil, fmt.Errorf("Failed to read API response body, %w", err)
+		}
+
+		// logger.Debug("API response", "body", string(body))
+
+		id_rsp := gjson.GetBytes(body, "photo.id")
+
+		if !id_rsp.Exists() {
+			return nil, fmt.Errorf("Missing photo.id")
+		}
+
+		secret_rsp := gjson.GetBytes(body, "photo.secret")
+
+		if !secret_rsp.Exists() {
+			return nil, fmt.Errorf("Missing photo.secret")
+		}
+
+		originalsecret_rsp := gjson.GetBytes(body, "photo.originalsecret")
+
+		if !originalsecret_rsp.Exists() {
+			return nil, fmt.Errorf("Missing photo.originalsecret")
+		}
+
+		originalformat_rsp := gjson.GetBytes(body, "photo.originalformat")
+
+		if !originalformat_rsp.Exists() {
+			return nil, fmt.Errorf("Missing photo.originalformat")
+		}
+
+		server_rsp := gjson.GetBytes(body, "photo.server")
+
+		if !server_rsp.Exists() {
+			return nil, fmt.Errorf("Missing photo.server")
+		}
+
+		farm_rsp := gjson.GetBytes(body, "photo.farm")
+
+		if !farm_rsp.Exists() {
+			return nil, fmt.Errorf("Missing photo.farm")
+		}
+
+		lastmod_rsp := gjson.GetBytes(body, "photo.dates.lastupdate")
+
+		if !lastmod_rsp.Exists() {
+			return nil, fmt.Errorf("Missing photo.dates.lastupdate")
+		}
+
+		id := id_rsp.Int()
+		// secret := secret_rsp.String()
+		originalsecret := originalsecret_rsp.String()
+		originalformat := originalformat_rsp.String()
+		server := server_rsp.String()
+		// lastmod := lastmod_rsp.Int()
+
+		path = fmt.Sprintf("/%s/%d_%s_o.%s", server, id, originalsecret, originalformat)
+	}
+
+	u, err := url.Parse("https://live.staticflickr.com")
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to parse base URL (which is weird), %w", err)
 	}
 
-	defer r.Close()
+	u.Path = path
+	url := u.String()
 
-	body, err := io.ReadAll(r)
-
-	if err != nil {
-		return nil, err
-	}
-
-	id_rsp := gjson.GetBytes(body, "photo.id")
-
-	if !id_rsp.Exists() {
-		return nil, fmt.Errorf("Missing photo.id")
-	}
-
-	secret_rsp := gjson.GetBytes(body, "photo.secret")
-
-	if !secret_rsp.Exists() {
-		return nil, fmt.Errorf("Missing photo.secret")
-	}
-
-	originalsecret_rsp := gjson.GetBytes(body, "photo.originalsecret")
-
-	if !originalsecret_rsp.Exists() {
-		return nil, fmt.Errorf("Missing photo.originalsecret")
-	}
-
-	originalformat_rsp := gjson.GetBytes(body, "photo.originalformat")
-
-	if !originalformat_rsp.Exists() {
-		return nil, fmt.Errorf("Missing photo.originalformat")
-	}
-
-	server_rsp := gjson.GetBytes(body, "photo.server")
-
-	if !server_rsp.Exists() {
-		return nil, fmt.Errorf("Missing photo.server")
-	}
-
-	farm_rsp := gjson.GetBytes(body, "photo.farm")
-
-	if !farm_rsp.Exists() {
-		return nil, fmt.Errorf("Missing photo.farm")
-	}
-
-	lastmod_rsp := gjson.GetBytes(body, "photo.dates.lastupdate")
-
-	if !lastmod_rsp.Exists() {
-		return nil, fmt.Errorf("Missing photo.dates.lastupdate")
-	}
-
-	id := id_rsp.Int()
-	// secret := secret_rsp.String()
-	originalsecret := originalsecret_rsp.String()
-	originalformat := originalformat_rsp.String()
-	server := server_rsp.String()
-	lastmod := lastmod_rsp.Int()
-
-	url := fmt.Sprintf("https://live.staticflickr.com/%s/%d_%s_o.%s", server, id, originalsecret, originalformat)
+	logger.Debug("Fetch URL", "url", url)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 
@@ -125,12 +172,14 @@ func (f *apiFS) Open(name string) (io_fs.File, error) {
 	str_len := rsp.Header.Get("Content-Length")
 	int_len, _ := strconv.ParseInt(str_len, 10, 64)
 
-	t := time.Unix(lastmod, 0)
+	// Fix me:
+	// t := time.Unix(lastmod, 0)
+	t := time.Now()
 
 	// To do: Derive file permissions from Flickr permissions
 	// "visibility":{"ispublic":0,"isfriend":0,"isfamily":0}
 
-	fl := &File{
+	fl := &apiFile{
 		name:           filepath.Base(url),
 		content:        rsp.Body,
 		content_length: int_len,
@@ -153,6 +202,9 @@ func (f apiFS) ReadFile(name string) ([]byte, error) {
 
 func (f *apiFS) ReadDir(name string) ([]io_fs.DirEntry, error) {
 
+	logger := slog.Default()
+	logger = logger.With("name", name)
+
 	ctx := context.Background()
 
 	args, err := url.ParseQuery(name)
@@ -160,6 +212,29 @@ func (f *apiFS) ReadDir(name string) ([]io_fs.DirEntry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse query, %w", err)
 	}
+
+	extras := make([]string, 0)
+
+	ensure_extras := []string{
+		"url_o",
+		"lastupdate",
+	}
+
+	if args.Has("extras") {
+		extras = strings.Split(args.Get("extras"), ",")
+		args.Del("extras")
+	}
+
+	for _, v := range ensure_extras {
+
+		if !slices.Contains(extras, v) {
+			extras = append(extras, v)
+		}
+	}
+
+	args.Set("extras", strings.Join(extras, ","))
+
+	logger.Debug("Read dir")
 
 	entries := []io_fs.DirEntry{}
 
@@ -177,7 +252,49 @@ func (f *apiFS) ReadDir(name string) ([]io_fs.DirEntry, error) {
 			return fmt.Errorf("Failed to read API response body, %w", err)
 		}
 
-		fmt.Println(string(body))
+		logger.Debug(string(body))
+
+		rsp := gjson.GetBytes(body, "*.photo")
+
+		if !rsp.Exists() {
+			return fmt.Errorf("Failed to derive photos from response")
+		}
+
+		// {\"id\":\"53961664838\",\"secret\":\"a11f30f8e0\",\"server\":\"65535\",\"farm\":66,\"title\":\"113028507763072851\",\"isprimary\":\"0\",\"ispublic\":0,\"isfriend\":0,\"isfamily\":0}
+
+		for _, ph := range rsp.Array() {
+
+			url_rsp := ph.Get("url_o")
+
+			if !url_rsp.Exists() {
+				logger.Warn("Response is missing url_o extra, skipping")
+				continue
+			}
+
+			url_o, err := url.Parse(url_rsp.String())
+
+			if err != nil {
+				return fmt.Errorf("Failed to parse url_o value (%s), %w", url_rsp.String(), err)
+			}
+
+			lastmod_rsp := ph.Get("lastupdate")
+			lastmod := time.Unix(lastmod_rsp.Int(), 0)
+
+			fi := &apiFileInfo{
+				name:    url_o.Path,
+				size:    -1,
+				is_spr:  false,
+				modTime: lastmod,
+			}
+
+			ent := &apiDirEntry{
+				info: fi,
+			}
+
+			logger.Debug("Add entry", "path", fi.name)
+			entries = append(entries, ent)
+		}
+
 		return nil
 	}
 

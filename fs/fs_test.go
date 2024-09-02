@@ -51,7 +51,7 @@ func TestFS(t *testing.T) {
 			return err
 		}
 
-		slog.Info("Walk", "path", path, "d", d)
+		slog.Info("Walk", "path", path, "d", d.Name())
 		return nil
 	}
 
