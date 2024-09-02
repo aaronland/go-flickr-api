@@ -27,6 +27,7 @@ type apiFS struct {
 	client      client.Client
 }
 
+// New creates a new FileSystem that reads files from the Flickr API.
 func New(ctx context.Context, cl client.Client) io_fs.FS {
 
 	http_cl := &http.Client{}
@@ -39,6 +40,10 @@ func New(ctx context.Context, cl client.Client) io_fs.FS {
 	return fs
 }
 
+// Open opens the named file. File names are expected to take the form of:
+// * A unique numeric identifier for a photo on the Flickr website
+// * The fully-qualified path (not the whole URL) for an static photo asset hosted by the Flickr webservers.
+// * A URL-encoded query string followed by the fully-qualified path (not the whole URL) for an static	photo asset hosted by the Flickr webservers encoded as a URL fragment.
 func (f *apiFS) Open(name string) (io_fs.File, error) {
 
 	ctx := context.Background()
@@ -57,6 +62,7 @@ func (f *apiFS) Open(name string) (io_fs.File, error) {
 			content_length: -1,
 			modTime:        time.Now(),
 			is_spr:         true,
+			perm:           0444,
 		}
 
 		return fl, nil
@@ -123,26 +129,18 @@ func (f *apiFS) Open(name string) (io_fs.File, error) {
 			return nil, fmt.Errorf("Missing photo.server")
 		}
 
-		farm_rsp := gjson.GetBytes(body, "photo.farm")
-
-		if !farm_rsp.Exists() {
-			return nil, fmt.Errorf("Missing photo.farm")
-		}
-
-		lastmod_rsp := gjson.GetBytes(body, "photo.dates.lastupdate")
-
-		if !lastmod_rsp.Exists() {
-			return nil, fmt.Errorf("Missing photo.dates.lastupdate")
-		}
-
 		id := id_rsp.Int()
-		// secret := secret_rsp.String()
+		secret := secret_rsp.String()
 		originalsecret := originalsecret_rsp.String()
 		originalformat := originalformat_rsp.String()
 		server := server_rsp.String()
-		// lastmod := lastmod_rsp.Int()
 
-		path = fmt.Sprintf("/%s/%d_%s_o.%s", server, id, originalsecret, originalformat)
+		if originalsecret != "" {
+			path = fmt.Sprintf("/%s/%d_%s_o.%s", server, id, originalsecret, originalformat)
+		} else {
+			// Something something something small files?
+			path = fmt.Sprintf("/%s/%d_%s_b.%s", server, id, secret, "jpg")
+		}
 	}
 
 	u, err := url.Parse("https://live.staticflickr.com")
@@ -199,6 +197,10 @@ func (f *apiFS) Open(name string) (io_fs.File, error) {
 	return fl, nil
 }
 
+// Returns the body of the named file. File names are expected to take the form of:
+// * A unique numeric identifier for a photo on the Flickr website
+// * The fully-qualified path (not the whole URL) for an static photo asset hosted by the Flickr webservers.
+// * A URL-encoded query string followed by the fully-qualified path (not the whole URL) for an static	photo asset hosted by the Flickr webservers encoded as a URL fragment.
 func (f apiFS) ReadFile(name string) ([]byte, error) {
 	r, err := f.Open(name)
 
@@ -210,6 +212,13 @@ func (f apiFS) ReadFile(name string) ([]byte, error) {
 	return io.ReadAll(r)
 }
 
+// Return the results of a "standard photo response" Flickr API call as zero or more `fs.DirEntry` instances. File names are
+// expected to take the form of a URL-escape URL query string containing the relevant Flickr API call parameters. Fully qualified
+// paths (not URLs) for individual photos are returned in query fragments (since the root "directory" is an API call), for example:
+//
+//	flickr.photosets.getPhotos&photoset_id=1418449&user_id=12037949754%40N01/#/29/65753018_ba12e6eed0_o.jpg
+//
+// See also: https://code.flickr.net/2008/08/19/standard-photos-response-apis-for-civilized-age/
 func (f *apiFS) ReadDir(name string) ([]io_fs.DirEntry, error) {
 
 	logger := slog.Default()
@@ -223,11 +232,24 @@ func (f *apiFS) ReadDir(name string) ([]io_fs.DirEntry, error) {
 		return nil, fmt.Errorf("Failed to parse query, %w", err)
 	}
 
+	// https://www.flickr.com/services/api/misc.urls.html
+
+	urls := []string{
+		"url_o",  // original
+		"url_4k", // has a unique secret; photo owner can restrict (4096)
+		"url_f",  // has a unique secret; photo owner can restrict (4096)
+		"url_k",  // has a unique secret; photo owner can restrict (2048)
+		"url_b",  // 1024
+	}
+
 	extras := make([]string, 0)
 
 	ensure_extras := []string{
-		"url_o",
 		"lastupdate",
+	}
+
+	for _, u := range urls {
+		extras = append(extras, u)
 	}
 
 	if args.Has("extras") {
@@ -262,36 +284,51 @@ func (f *apiFS) ReadDir(name string) ([]io_fs.DirEntry, error) {
 			return fmt.Errorf("Failed to read API response body, %w", err)
 		}
 
-		logger.Debug(string(body))
-
+		// https://code.flickr.net/2008/08/19/standard-photos-response-apis-for-civilized-age/
 		rsp := gjson.GetBytes(body, "*.photo")
 
 		if !rsp.Exists() {
 			return fmt.Errorf("Failed to derive photos from response")
 		}
 
-		// {\"id\":\"53961664838\",\"secret\":\"a11f30f8e0\",\"server\":\"65535\",\"farm\":66,\"title\":\"113028507763072851\",\"isprimary\":\"0\",\"ispublic\":0,\"isfriend\":0,\"isfamily\":0}
-
 		for _, ph := range rsp.Array() {
 
-			url_rsp := ph.Get("url_o")
+			var ph_url *url.URL
 
-			if !url_rsp.Exists() {
-				logger.Warn("Response is missing url_o extra, skipping")
-				continue
+			for _, path := range urls {
+
+				url_rsp := ph.Get(path)
+
+				if !url_rsp.Exists() {
+					logger.Warn("Response is missing extra, skipping", "path", path)
+					continue
+				}
+
+				url_str := url_rsp.String()
+
+				if url_str == "" {
+					logger.Warn("Response has empty extra property, skipping", "path", path)
+				}
+
+				v, err := url.Parse(url_str)
+
+				if err != nil {
+					return fmt.Errorf("Failed to parse url_o value (%s), %w", url_rsp.String(), err)
+				}
+
+				ph_url = v
+				break
 			}
 
-			url_o, err := url.Parse(url_rsp.String())
-
-			if err != nil {
-				return fmt.Errorf("Failed to parse url_o value (%s), %w", url_rsp.String(), err)
+			if ph_url == nil {
+				return fmt.Errorf("Failed to derive photo URL")
 			}
 
 			lastmod_rsp := ph.Get("lastupdate")
 			lastmod := time.Unix(lastmod_rsp.Int(), 0)
 
 			fi := &apiFileInfo{
-				name:    fmt.Sprintf("#%s", url_o.Path),
+				name:    fmt.Sprintf("#%s", ph_url.Path),
 				size:    -1,
 				is_spr:  false,
 				modTime: lastmod,
@@ -317,6 +354,7 @@ func (f *apiFS) ReadDir(name string) ([]io_fs.DirEntry, error) {
 	return entries, nil
 }
 
+// Sub returns a "Not supported" error since it is not applicable.
 func (f *apiFS) Sub(path string) (io_fs.FS, error) {
 	return nil, fmt.Errorf("Not supported")
 }

@@ -14,6 +14,12 @@ import (
 	"github.com/aaronland/go-flickr-api/client"
 )
 
+type apiTest struct {
+	photo_id    string
+	user_id     string
+	photoset_id string
+}
+
 var client_uri = flag.String("client-uri", "", "...")
 
 func TestRePhoto(t *testing.T) {
@@ -73,46 +79,69 @@ func TestFS(t *testing.T) {
 
 	fs := New(ctx, cl)
 
-	fl, err := fs.Open("53961664838")
-
-	if err != nil {
-		t.Fatalf("Failed to open , %v", err)
+	tests := []apiTest{
+		apiTest{
+			// https://flickr.com/photos/straup/6923069836
+			photo_id: "6923069836",
+			// https://flickr.com/photos/straup
+			user_id: "35034348999@N01",
+			// https://flickr.com/photos/straup/albums/72157629455113026/
+			photoset_id: "72157629455113026",
+		},
+		apiTest{
+			// https://flickr.com/photos/bees/65753018
+			photo_id: "65753018",
+			// https://flickr.com/photos/bees
+			user_id: "12037949754@N01",
+			// https://flickr.com/photos/bees/albums/1418449/
+			photoset_id: "1418449",
+		},
 	}
 
-	_, _, err = image.Decode(fl)
+	for _, fs_test := range tests {
 
-	if err != nil {
-		t.Fatalf("Failed to decode image, %v", err)
-	}
-
-	walk_func := func(path string, d io_fs.DirEntry, err error) error {
+		fl, err := fs.Open(fs_test.photo_id)
 
 		if err != nil {
-			return err
+			t.Fatalf("Failed to open photo %s, %v", fs_test.photo_id, err)
 		}
 
-		slog.Info("Walk", "path", path, "d", d.Name())
-
-		r, err := fs.Open(path)
+		_, _, err = image.Decode(fl)
 
 		if err != nil {
-			return fmt.Errorf("Failed to open '%s', %w", path, err)
+			t.Fatalf("Failed to decode image, %v", err)
 		}
 
-		defer r.Close()
-		return nil
-	}
+		walk_func := func(path string, d io_fs.DirEntry, err error) error {
 
-	u := url.Values{}
-	u.Set("method", "flickr.photosets.getPhotos")
-	u.Set("photoset_id", "72177720319945125")
-	u.Set("user_id", "35034348999@N01")
+			if err != nil {
+				return err
+			}
 
-	q := u.Encode()
+			slog.Info("Walk", "path", path, "d", d.Name())
 
-	err = io_fs.WalkDir(fs, q, walk_func)
+			r, err := fs.Open(path)
 
-	if err != nil {
-		t.Fatalf("Failed to walk '%s', %v", q, err)
+			if err != nil {
+				return fmt.Errorf("Failed to open '%s', %w", path, err)
+			}
+
+			defer r.Close()
+			return nil
+		}
+
+		u := url.Values{}
+
+		// https://www.flickr.com/services/api/flickr.photosets.getPhotos.html
+		u.Set("method", "flickr.photosets.getPhotos")
+		u.Set("photoset_id", fs_test.photoset_id)
+		u.Set("user_id", fs_test.user_id)
+		q := u.Encode()
+
+		err = io_fs.WalkDir(fs, q, walk_func)
+
+		if err != nil {
+			t.Fatalf("Failed to walk '%s', %v", q, err)
+		}
 	}
 }
