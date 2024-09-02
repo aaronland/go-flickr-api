@@ -315,8 +315,6 @@ func (f *apiFS) ReadDir(name string) ([]io_fs.DirEntry, error) {
 			return fmt.Errorf("Failed to read API response body, %w", err)
 		}
 
-		slog.Debug("RESPONSE", "rsp", string(body))
-
 		// https://code.flickr.net/2008/08/19/standard-photos-response-apis-for-civilized-age/
 		rsp := gjson.GetBytes(body, "*.photo")
 
