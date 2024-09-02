@@ -2,7 +2,7 @@
 
 There is now experimental support for reading photos and the results of [standard places response](https://code.flickr.net/2008/08/19/standard-photos-response-apis-for-civilized-age/) API calls using the [io/fs.FS](https://pkg.go.dev/io/fs) interfaces.
 
-Individial photos can be read using the `Open` method where file names are expected to take the form of.
+Individual photos can be read using the `Open` method where file names are expected to take the form of.
 
 * A unique numeric identifier for a photo on the Flickr website
 * The fully-qualified path (not the whole URL) for an static photo asset hosted by the Flickr webservers.
@@ -47,6 +47,10 @@ All of the [tests](fs_test.go) pass but there may still be "gotchas" or other ed
 ```
 $> go test -v -run TestFS -client-uri 'oauth1://?consumer_key={CONSUMER_KEY}&consumer_secret={CONSUMER_SECRET}&oauth_token={OAUTH_TOKEN}&oauth_token_secret={OAUTH_SECRET}'
 ```
+
+## Caching
+
+There is current no caching. Every time you `Open` a file it is fetched from the Flickr API and/or photo servers. Some amount of caching would be good.
 
 ## Example
 
