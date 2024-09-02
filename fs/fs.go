@@ -19,8 +19,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-var re_photo = regexp.MustCompile(`^(?:\d+|\d+\/\d+_\w+_[a-z]\.\w+)$`)
-var re_url = regexp.MustCompile(`^\d+\/\d+_\w+_[a-z]\.\w+$`)
+var re_photo = regexp.MustCompile(`^(?:\d+|(?:.*?\#)?\/\d+\/\d+_\w+_[a-z]\.\w+)$`)
+var re_url = regexp.MustCompile(`\#?(\/\d+\/\d+_\w+_[a-z]\.\w+)$`)
 
 type apiFS struct {
 	io_fs.FS
@@ -47,6 +47,8 @@ func (f *apiFS) Open(name string) (io_fs.File, error) {
 	logger := slog.Default()
 	logger = logger.With("name", name)
 
+	logger.Debug("Open file")
+
 	if !re_photo.MatchString(name) {
 
 		logger.Debug("File does not match photo ID or URL, assuming SPR entry")
@@ -64,7 +66,10 @@ func (f *apiFS) Open(name string) (io_fs.File, error) {
 	var path string
 
 	if re_url.MatchString(name) {
-		path = name
+
+		m := re_url.FindStringSubmatch(name)
+		path = m[1]
+		logger.Debug("Derive relative path", "rel path", path)
 	} else {
 
 		args := &url.Values{}
@@ -281,7 +286,7 @@ func (f *apiFS) ReadDir(name string) ([]io_fs.DirEntry, error) {
 			lastmod := time.Unix(lastmod_rsp.Int(), 0)
 
 			fi := &apiFileInfo{
-				name:    url_o.Path,
+				name:    fmt.Sprintf("#%s", url_o.Path),
 				size:    -1,
 				is_spr:  false,
 				modTime: lastmod,

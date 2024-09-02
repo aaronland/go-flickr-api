@@ -3,6 +3,7 @@ package fs
 import (
 	"context"
 	"flag"
+	"fmt"
 	"image"
 	_ "image/jpeg"
 	io_fs "io/fs"
@@ -14,6 +15,45 @@ import (
 )
 
 var client_uri = flag.String("client-uri", "", "...")
+
+func TestRePhoto(t *testing.T) {
+
+	tests := []string{
+		"53961664838",
+		"/65535/53961664838_49a7d74e87_o.jpg",
+		"method=flickr.photosets.getPhotos&photoset_id=72177720319945125&user_id=35034348999%40N01/#/65535/53961664838_49a7d74e87_o.jpg",
+	}
+
+	for _, str := range tests {
+
+		if !re_photo.MatchString(str) {
+			t.Fatalf("Failed to match '%s'", str)
+		}
+	}
+
+}
+
+func TestReURL(t *testing.T) {
+
+	tests := map[string]string{
+		"/65535/53961664838_49a7d74e87_o.jpg": "/65535/53961664838_49a7d74e87_o.jpg",
+		"method=flickr.photosets.getPhotos&photoset_id=72177720319945125&user_id=35034348999%40N01/#/65535/53961664838_49a7d74e87_o.jpg": "/65535/53961664838_49a7d74e87_o.jpg",
+	}
+
+	for str, expected := range tests {
+
+		if !re_url.MatchString(str) {
+			t.Fatalf("Failed to match '%s'", str)
+		}
+
+		m := re_url.FindStringSubmatch(str)
+
+		if m[1] != expected {
+			t.Fatalf("Unexpected match for '%s', expected '%s' but got '%s'", str, expected, m[1])
+		}
+	}
+
+}
 
 func TestFS(t *testing.T) {
 
@@ -52,6 +92,14 @@ func TestFS(t *testing.T) {
 		}
 
 		slog.Info("Walk", "path", path, "d", d.Name())
+
+		r, err := fs.Open(path)
+
+		if err != nil {
+			return fmt.Errorf("Failed to open '%s', %w", path, err)
+		}
+
+		defer r.Close()
 		return nil
 	}
 
