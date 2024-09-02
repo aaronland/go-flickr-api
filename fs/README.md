@@ -38,7 +38,15 @@ This method will return zero or more `fs.DirEntry` instances whose name (path) w
 method=flickr.photosets.getPhotos&photoset_id=72157629455113026&user_id=35034348999%40N01/#/7244/7071114647_b8bcd16b65_o.jpg
 ```
 
-Which is not ideal but easy enough to account for (which the `Open` and `ReadFile` methods do automatically. All of the [tests](fs_test.go) pass but there may still be "gotchas" or other edge cases.
+Which is not ideal but easy enough to account for (which the `Open` and `ReadFile` methods do automatically.
+
+## Tests
+
+All of the [tests](fs_test.go) pass but there may still be "gotchas" or other edge cases. In order to run the tests with calls to the Flickr API you will need to run them with a valid `-client-uri` flag. For example:
+
+```
+$> go test -v -run TestFS -client-uri 'oauth1://?consumer_key={CONSUMER_KEY}&consumer_secret={CONSUMER_SECRET}&oauth_token={OAUTH_TOKEN}&oauth_token_secret={OAUTH_SECRET}'
+```
 
 ## Example
 
@@ -59,7 +67,7 @@ func main() {
 	ctx := context.Background()
 
 	// https://github.com/aaronland/go-flickr-api?tab=readme-ov-file#clients
-	client_uri := "oauth2://..."
+	client_uri := "oauth1://..."
 	
 	cl, _ := client.NewClient(ctx, client_uri)
 	fs := New(ctx, cl)

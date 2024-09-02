@@ -22,40 +22,46 @@ type apiTest struct {
 
 var client_uri = flag.String("client-uri", "", "...")
 
-func TestRePhoto(t *testing.T) {
+func TestMatchesPhotoId(t *testing.T) {
 
 	tests := []string{
 		"53961664838",
 		"/65535/53961664838_49a7d74e87_o.jpg",
+		"65535/53961664838_49a7d74e87_o.jpg",
 		"method=flickr.photosets.getPhotos&photoset_id=72177720319945125&user_id=35034348999%40N01/#/65535/53961664838_49a7d74e87_o.jpg",
 	}
 
 	for _, str := range tests {
 
-		if !re_photo.MatchString(str) {
-			t.Fatalf("Failed to match '%s'", str)
+		if !MatchesPhotoId(str) {
+			t.Fatalf("Failed to match photo ID '%s'", str)
 		}
 	}
 
 }
 
-func TestReURL(t *testing.T) {
+func TestMatchesPhotoURL(t *testing.T) {
 
 	tests := map[string]string{
 		"/65535/53961664838_49a7d74e87_o.jpg": "/65535/53961664838_49a7d74e87_o.jpg",
+		"65535/53961664838_49a7d74e87_o.jpg":  "65535/53961664838_49a7d74e87_o.jpg",
 		"method=flickr.photosets.getPhotos&photoset_id=72177720319945125&user_id=35034348999%40N01/#/65535/53961664838_49a7d74e87_o.jpg": "/65535/53961664838_49a7d74e87_o.jpg",
 	}
 
 	for str, expected := range tests {
 
-		if !re_url.MatchString(str) {
+		if !MatchesPhotoURL(str) {
 			t.Fatalf("Failed to match '%s'", str)
 		}
 
-		m := re_url.FindStringSubmatch(str)
+		v, err := DerivePhotoURL(str)
 
-		if m[1] != expected {
-			t.Fatalf("Unexpected match for '%s', expected '%s' but got '%s'", str, expected, m[1])
+		if err != nil {
+			t.Fatalf("Failed to derive photo URL from '%s', %v", str, err)
+		}
+
+		if v != expected {
+			t.Fatalf("Unexpected match for '%s', expected '%s' but got '%s'", str, expected, v)
 		}
 	}
 
