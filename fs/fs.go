@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"regexp"
 	"slices"
 	"strconv"
@@ -177,15 +176,21 @@ func (f *apiFS) Open(name string) (io_fs.File, error) {
 	str_len := rsp.Header.Get("Content-Length")
 	int_len, _ := strconv.ParseInt(str_len, 10, 64)
 
-	// Fix me:
-	// t := time.Unix(lastmod, 0)
-	t := time.Now()
+	// last-modified: Sat, 31 Aug 2024 20:07:47 GMT
+	lastmod := rsp.Header.Get("Last-Modified")
+
+	t, err := time.Parse(time.RFC1123, lastmod)
+
+	if err != nil {
+		logger.Error("Failed to parse lastmod time, default to now", "lastmod", lastmod, "error", err)
+		t = time.Now()
+	}
 
 	// To do: Derive file permissions from Flickr permissions
 	// "visibility":{"ispublic":0,"isfriend":0,"isfamily":0}
 
 	fl := &apiFile{
-		name:           filepath.Base(url),
+		name:           u.Path,
 		content:        rsp.Body,
 		content_length: int_len,
 		modTime:        t,
