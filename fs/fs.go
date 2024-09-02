@@ -1,13 +1,12 @@
-package api
+package fs
 
 import (
 	"context"
 	"fmt"
 	"io"
-	"io/fs"
+	io_fs "io/fs"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -16,17 +15,17 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-type FS struct {
-	fs.FS
+type apiFS struct {
+	io_fs.FS
 	http_client *http.Client
 	client      client.Client
 }
 
-func NewFS(ctx context.Context, cl client.Client) *FS {
+func New(ctx context.Context, cl client.Client) io_fs.FS {
 
 	http_cl := &http.Client{}
 
-	fs := &FS{
+	fs := &apiFS{
 		http_client: http_cl,
 		client:      cl,
 	}
@@ -34,7 +33,7 @@ func NewFS(ctx context.Context, cl client.Client) *FS {
 	return fs
 }
 
-func (f *FS) Open(name string) (fs.File, error) {
+func (f *apiFS) Open(name string) (io_fs.File, error) {
 
 	args := &url.Values{}
 	args.Set("method", "flickr.photos.getInfo")
@@ -91,8 +90,6 @@ func (f *FS) Open(name string) (fs.File, error) {
 		return nil, fmt.Errorf("Missing photo.farm")
 	}
 
-	// "visibility":{"ispublic":0,"isfriend":0,"isfamily":0}
-
 	lastmod_rsp := gjson.GetBytes(body, "photo.dates.lastupdate")
 
 	if !lastmod_rsp.Exists() {
@@ -111,13 +108,13 @@ func (f *FS) Open(name string) (fs.File, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to create new request, %w", err)
 	}
 
 	rsp, err := f.http_client.Do(req)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to execute request, %w", err)
 	}
 
 	if rsp.StatusCode != http.StatusOK {
@@ -130,6 +127,9 @@ func (f *FS) Open(name string) (fs.File, error) {
 
 	t := time.Unix(lastmod, 0)
 
+	// To do: Derive file permissions from Flickr permissions
+	// "visibility":{"ispublic":0,"isfriend":0,"isfamily":0}
+
 	fl := &File{
 		name:           filepath.Base(url),
 		content:        rsp.Body,
@@ -140,82 +140,56 @@ func (f *FS) Open(name string) (fs.File, error) {
 	return fl, nil
 }
 
-type File struct {
-	name           string
-	perm           os.FileMode
-	content        io.ReadCloser
-	content_length int64
-	modTime        time.Time
-	closed         bool
-}
-
-func (f *File) Stat() (fs.FileInfo, error) {
-	if f.closed {
-		return nil, fs.ErrClosed
-	}
-	fi := fileInfo{
-		name:    f.name,
-		size:    f.content_length,
-		modTime: f.modTime,
-		mode:    f.perm,
-	}
-	return &fi, nil
-}
-
-func (f *File) Read(b []byte) (int, error) {
-	if f.closed {
-		return 0, fs.ErrClosed
-	}
-	return f.content.Read(b)
-}
-
-func (f *File) Close() error {
-	if f.closed {
-		return fs.ErrClosed
-	}
-	err := f.content.Close()
+func (f apiFS) ReadFile(name string) ([]byte, error) {
+	r, err := f.Open(name)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	f.closed = true
-	return nil
+	defer r.Close()
+	return io.ReadAll(r)
 }
 
-type fileInfo struct {
-	name    string
-	size    int64
-	modTime time.Time
-	mode    fs.FileMode
+func (f *apiFS) ReadDir(name string) ([]io_fs.DirEntry, error) {
+
+	ctx := context.Background()
+
+	args, err := url.ParseQuery(name)
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse query, %w", err)
+	}
+
+	entries := []io_fs.DirEntry{}
+
+	cb := func(ctx context.Context, r io.ReadSeekCloser, err error) error {
+
+		defer r.Close()
+
+		if err != nil {
+			return err
+		}
+
+		body, err := io.ReadAll(r)
+
+		if err != nil {
+			return fmt.Errorf("Failed to read API response body, %w", err)
+		}
+
+		fmt.Println(string(body))
+		return nil
+	}
+
+	err = client.ExecuteMethodPaginatedWithClient(ctx, f.client, &args, cb)
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed to execute query, %w", err)
+	}
+
+	return entries, nil
 }
 
-// base name of the file
-func (fi *fileInfo) Name() string {
-	return fi.name
-}
-
-// length in bytes for regular files; system-dependent for others
-func (fi *fileInfo) Size() int64 {
-	return fi.size
-}
-
-// file mode bits
-func (fi *fileInfo) Mode() fs.FileMode {
-	return fi.mode
-}
-
-// modification time
-func (fi *fileInfo) ModTime() time.Time {
-	return fi.modTime
-}
-
-// abbreviation for Mode().IsDir()
-func (fi *fileInfo) IsDir() bool {
-	return false
-}
-
-// underlying data source (can return nil)
-func (fi *fileInfo) Sys() interface{} {
-	return nil
+func (f *apiFS) Sub(path string) (io_fs.FS, error) {
+	return nil, fmt.Errorf("Not supported")
 }
