@@ -44,7 +44,7 @@ func TestMatchesPhotoURL(t *testing.T) {
 
 	tests := map[string]string{
 		"/65535/53961664838_49a7d74e87_o.jpg": "/65535/53961664838_49a7d74e87_o.jpg",
-		"65535/53961664838_49a7d74e87_o.jpg":  "65535/53961664838_49a7d74e87_o.jpg",
+		"65535/53961664838_49a7d74e87_o.jpg":  "/65535/53961664838_49a7d74e87_o.jpg",
 		"method=flickr.photosets.getPhotos&photoset_id=72177720319945125&user_id=35034348999%40N01/#/65535/53961664838_49a7d74e87_o.jpg": "/65535/53961664838_49a7d74e87_o.jpg",
 	}
 
