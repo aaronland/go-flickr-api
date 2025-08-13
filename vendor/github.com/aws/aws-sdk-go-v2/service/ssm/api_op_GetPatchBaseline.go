@@ -61,6 +61,13 @@ type GetPatchBaselineOutput struct {
 	// Applies to Linux managed nodes only.
 	ApprovedPatchesEnableNonSecurity *bool
 
+	// Indicates the compliance status of managed nodes for which security-related
+	// patches are available but were not approved. This preference is specified when
+	// the CreatePatchBaseline or UpdatePatchBaseline commands are run.
+	//
+	// Applies to Windows Server managed nodes only.
+	AvailableSecurityUpdatesComplianceStatus types.PatchComplianceStatus
+
 	// The ID of the retrieved patch baseline.
 	BaselineId *string
 
@@ -168,6 +175,9 @@ func (c *Client) addOperationGetPatchBaselineMiddlewares(stack *middleware.Stack
 	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
+	if err = addCredentialSource(stack, options); err != nil {
+		return err
+	}
 	if err = addOpGetPatchBaselineValidationMiddleware(stack); err != nil {
 		return err
 	}
@@ -187,6 +197,36 @@ func (c *Client) addOperationGetPatchBaselineMiddlewares(stack *middleware.Stack
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptExecution(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeSerialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterSerialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeSigning(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterSigning(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptTransmit(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeDeserialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterDeserialization(stack, options); err != nil {
 		return err
 	}
 	if err = addSpanInitializeStart(stack); err != nil {

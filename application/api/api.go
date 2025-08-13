@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/aaronland/go-flickr-api/application"
 	"github.com/aaronland/go-flickr-api/client"
+	"github.com/aaronland/gocloud/runtimevar"
 	"github.com/mitchellh/go-wordwrap"
 	"github.com/sfomuseum/go-flags/flagset"
 	"github.com/sfomuseum/go-flags/multi"
-	"github.com/sfomuseum/runtimevar"
 	"io"
 	_ "log"
 	"net/url"
@@ -38,12 +38,12 @@ func (app *APIApplication) DefaultFlagSet() *flag.FlagSet {
 	fs.Var(&params, "param", "Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.")
 
 	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, wordwrap.WrapString("Command-line tool for invoking the Flickr API. Results are emitted to STDOUT.\n\n", 80))
+		fmt.Fprint(os.Stderr, wordwrap.WrapString("Command-line tool for invoking the Flickr API. Results are emitted to STDOUT.\n\n", 80))
 		fmt.Fprintf(os.Stderr, "Usage:\n\t%s [options]\n\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "Valid options are:\n")
+		fmt.Fprint(os.Stderr, "Valid options are:\n")
 		fs.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nNotes:\n\n")
-		fmt.Fprintf(os.Stderr, wordwrap.WrapString("Uploading and replacing images are not supported by this tool. You can use the 'upload' and 'replace' tools, respectively, for those tasks.\n", 80))
+		fmt.Fprint(os.Stderr, "\nNotes:\n\n")
+		fmt.Fprint(os.Stderr, wordwrap.WrapString("Uploading and replacing images are not supported by this tool. You can use the 'upload' and 'replace' tools, respectively, for those tasks.\n", 80))
 
 		fmt.Fprintf(os.Stderr, "\n")
 	}

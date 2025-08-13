@@ -2,11 +2,11 @@ package oauth1
 
 import (
 	_ "embed"
+	"html/template"
+	"net/http"
+
 	"github.com/aaronland/go-flickr-api/client"
 	"gocloud.dev/docstore"
-	"html/template"
-	_ "log"
-	gohttp "net/http"
 )
 
 //go:embed request.html
@@ -27,7 +27,7 @@ type RequestTokenHandlerOptions struct {
 
 // Return a new HTTP handler to create a new OAuth1 authorization request token and then redirect to the
 // Flickr API OAuth1 authorization approval endpoint.
-func NewRequestTokenHandler(opts *RequestTokenHandlerOptions) (gohttp.Handler, error) {
+func NewRequestTokenHandler(opts *RequestTokenHandlerOptions) (http.Handler, error) {
 
 	t := template.New("request")
 
@@ -37,7 +37,7 @@ func NewRequestTokenHandler(opts *RequestTokenHandlerOptions) (gohttp.Handler, e
 		return nil, err
 	}
 
-	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
+	fn := func(rsp http.ResponseWriter, req *http.Request) {
 
 		ctx := req.Context()
 
@@ -47,7 +47,7 @@ func NewRequestTokenHandler(opts *RequestTokenHandlerOptions) (gohttp.Handler, e
 			err = t.Execute(rsp, nil)
 
 			if err != nil {
-				gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+				http.Error(rsp, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
@@ -58,38 +58,38 @@ func NewRequestTokenHandler(opts *RequestTokenHandlerOptions) (gohttp.Handler, e
 			req_token, err := opts.Client.GetRequestToken(ctx, opts.AuthCallback)
 
 			if err != nil {
-				gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+				http.Error(rsp, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
 			cache, err := NewRequestTokenCache(req_token)
 
 			if err != nil {
-				gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+				http.Error(rsp, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
 			err = opts.Collection.Put(ctx, cache)
 
 			if err != nil {
-				gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+				http.Error(rsp, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
 			auth_url, err := opts.Client.GetAuthorizationURL(ctx, req_token, opts.Permissions)
 
 			if err != nil {
-				gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+				http.Error(rsp, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
-			gohttp.Redirect(rsp, req, auth_url, gohttp.StatusFound)
+			http.Redirect(rsp, req, auth_url, http.StatusFound)
 
 		default:
-			gohttp.Error(rsp, "Method now allowed", gohttp.StatusMethodNotAllowed)
+			http.Error(rsp, "Method now allowed", http.StatusMethodNotAllowed)
 			return
 		}
 	}
 
-	return gohttp.HandlerFunc(fn), nil
+	return http.HandlerFunc(fn), nil
 }

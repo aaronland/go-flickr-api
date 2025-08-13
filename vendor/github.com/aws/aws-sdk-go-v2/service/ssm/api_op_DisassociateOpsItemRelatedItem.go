@@ -12,7 +12,7 @@ import (
 
 // Deletes the association between an OpsItem and a related item. For example,
 // this API operation can delete an Incident Manager incident from an OpsItem.
-// Incident Manager is a capability of Amazon Web Services Systems Manager.
+// Incident Manager is a tool in Amazon Web Services Systems Manager.
 func (c *Client) DisassociateOpsItemRelatedItem(ctx context.Context, params *DisassociateOpsItemRelatedItemInput, optFns ...func(*Options)) (*DisassociateOpsItemRelatedItemOutput, error) {
 	if params == nil {
 		params = &DisassociateOpsItemRelatedItemInput{}
@@ -116,6 +116,9 @@ func (c *Client) addOperationDisassociateOpsItemRelatedItemMiddlewares(stack *mi
 	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
+	if err = addCredentialSource(stack, options); err != nil {
+		return err
+	}
 	if err = addOpDisassociateOpsItemRelatedItemValidationMiddleware(stack); err != nil {
 		return err
 	}
@@ -135,6 +138,36 @@ func (c *Client) addOperationDisassociateOpsItemRelatedItemMiddlewares(stack *mi
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptExecution(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeSerialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterSerialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeSigning(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterSigning(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptTransmit(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeDeserialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterDeserialization(stack, options); err != nil {
 		return err
 	}
 	if err = addSpanInitializeStart(stack); err != nil {

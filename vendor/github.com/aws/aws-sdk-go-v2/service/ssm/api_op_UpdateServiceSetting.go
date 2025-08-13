@@ -48,15 +48,19 @@ type UpdateServiceSettingInput struct {
 	// arn:aws:ssm:us-east-1:111122223333:servicesetting/ssm/parameter-store/high-throughput-enabled
 	// . The setting ID can be one of the following.
 	//
-	//   - /ssm/managed-instance/default-ec2-instance-management-role
+	//   - /ssm/appmanager/appmanager-enabled
 	//
 	//   - /ssm/automation/customer-script-log-destination
 	//
 	//   - /ssm/automation/customer-script-log-group-name
 	//
+	//   - /ssm/automation/enable-adaptive-concurrency
+	//
 	//   - /ssm/documents/console/public-sharing-permission
 	//
 	//   - /ssm/managed-instance/activation-tier
+	//
+	//   - /ssm/managed-instance/default-ec2-instance-management-role
 	//
 	//   - /ssm/opsinsights/opscenter
 	//
@@ -75,8 +79,7 @@ type UpdateServiceSettingInput struct {
 	// The new value to specify for the service setting. The following list specifies
 	// the available values for each setting.
 	//
-	//   - For /ssm/managed-instance/default-ec2-instance-management-role , enter the
-	//   name of an IAM role.
+	//   - For /ssm/appmanager/appmanager-enabled , enter True or False .
 	//
 	//   - For /ssm/automation/customer-script-log-destination , enter CloudWatch .
 	//
@@ -87,6 +90,9 @@ type UpdateServiceSettingInput struct {
 	//   Disable .
 	//
 	//   - For /ssm/managed-instance/activation-tier , enter standard or advanced .
+	//
+	//   - For /ssm/managed-instance/default-ec2-instance-management-role , enter the
+	//   name of an IAM role.
 	//
 	//   - For /ssm/opsinsights/opscenter , enter Enabled or Disabled .
 	//
@@ -173,6 +179,9 @@ func (c *Client) addOperationUpdateServiceSettingMiddlewares(stack *middleware.S
 	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
+	if err = addCredentialSource(stack, options); err != nil {
+		return err
+	}
 	if err = addOpUpdateServiceSettingValidationMiddleware(stack); err != nil {
 		return err
 	}
@@ -192,6 +201,36 @@ func (c *Client) addOperationUpdateServiceSettingMiddlewares(stack *middleware.S
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptExecution(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeSerialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterSerialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeSigning(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterSigning(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptTransmit(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeDeserialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterDeserialization(stack, options); err != nil {
 		return err
 	}
 	if err = addSpanInitializeStart(stack); err != nil {

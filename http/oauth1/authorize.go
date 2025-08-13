@@ -2,15 +2,16 @@ package oauth1
 
 import (
 	_ "embed"
+	"html/template"
+	"log"
+	"net/http"
+	"net/url"
+
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/response"
-	"github.com/aaronland/go-http-sanitize"
+	"github.com/aaronland/go-http/v3/sanitize"
 	"gocloud.dev/docstore"
-	"html/template"
-	"log"
-	gohttp "net/http"
-	"net/url"
 )
 
 //go:embed authorize.html
@@ -34,7 +35,7 @@ type AuthorizationVars struct {
 // Return a new HTTP handler to receive a process OAuth1 authorization callback requests. This handler will
 // retrieve the request token associated with the authorization request and exchange these elements for a permanent
 // OAuth1 access token.
-func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohttp.Handler, error) {
+func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (http.Handler, error) {
 
 	t := template.New("authorize")
 
@@ -44,21 +45,21 @@ func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohtt
 		return nil, err
 	}
 
-	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
+	fn := func(rsp http.ResponseWriter, req *http.Request) {
 
 		ctx := req.Context()
 
 		token, err := sanitize.GetString(req, "oauth_token")
 
 		if err != nil {
-			gohttp.Error(rsp, "Missing ?oauth_token parameter", gohttp.StatusBadRequest)
+			http.Error(rsp, "Missing ?oauth_token parameter", http.StatusBadRequest)
 			return
 		}
 
 		verifier, err := sanitize.GetString(req, "oauth_verifier")
 
 		if err != nil {
-			gohttp.Error(rsp, "Missing ?oauth_verifier parameter", gohttp.StatusBadRequest)
+			http.Error(rsp, "Missing ?oauth_verifier parameter", http.StatusBadRequest)
 			return
 		}
 
@@ -69,7 +70,7 @@ func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohtt
 		err = opts.Collection.Get(ctx, cache)
 
 		if err != nil {
-			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			http.Error(rsp, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -95,14 +96,14 @@ func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohtt
 		access_token, err := opts.Client.GetAccessToken(ctx, req_token, auth_token)
 
 		if err != nil {
-			gohttp.Error(rsp, "Missing ?oauth_verifier parameter", gohttp.StatusBadRequest)
+			http.Error(rsp, "Missing ?oauth_verifier parameter", http.StatusBadRequest)
 			return
 		}
 
 		cl, err := opts.Client.WithAccessToken(ctx, access_token)
 
 		if err != nil {
-			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			http.Error(rsp, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -112,7 +113,7 @@ func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohtt
 		login_rsp, err := cl.ExecuteMethod(ctx, args)
 
 		if err != nil {
-			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			http.Error(rsp, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -121,7 +122,7 @@ func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohtt
 		login, err := response.UnmarshalCheckLoginJSONResponse(login_rsp)
 
 		if err != nil {
-			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			http.Error(rsp, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -133,12 +134,12 @@ func NewAuthorizationTokenHandler(opts *AuthorizationTokenHandlerOptions) (gohtt
 		err = t.Execute(rsp, vars)
 
 		if err != nil {
-			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)
+			http.Error(rsp, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		return
 	}
 
-	return gohttp.HandlerFunc(fn), nil
+	return http.HandlerFunc(fn), nil
 }

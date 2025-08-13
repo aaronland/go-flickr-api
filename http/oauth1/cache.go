@@ -1,8 +1,9 @@
 package oauth1
 
 import (
-	"github.com/aaronland/go-flickr-api/auth"
 	"time"
+
+	"github.com/aaronland/go-flickr-api/auth"
 )
 
 // RequestTokenCache is a struct containing OAuth1 request token details and a timestamp

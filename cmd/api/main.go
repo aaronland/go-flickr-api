@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/aaronland/go-flickr-api/application/api"
+	"log"
+
 	_ "gocloud.dev/runtimevar/constantvar"
 	_ "gocloud.dev/runtimevar/filevar"
-	"log"
+
+	"github.com/aaronland/go-flickr-api/application/api"
 )
 
 func main() {

@@ -3,11 +3,11 @@ package reader
 import (
 	"context"
 	"fmt"
-	"gocloud.dev/blob"
 	"io"
-	_ "log"
 	"net/url"
 	"path/filepath"
+
+	"gocloud.dev/blob"
 )
 
 // Return an io.ReadCloser instance using the gocloud.dev/blob NewReader method.

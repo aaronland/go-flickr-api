@@ -5,16 +5,17 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/aaronland/go-flickr-api/application"
-	"github.com/aaronland/go-flickr-api/client"
-	"github.com/aaronland/go-flickr-api/reader"
-	"github.com/mitchellh/go-wordwrap"
-	"github.com/sfomuseum/go-flags/flagset"
-	"github.com/sfomuseum/go-flags/multi"
-	"github.com/sfomuseum/runtimevar"
 	"log"
 	"net/url"
 	"os"
+
+	"github.com/aaronland/go-flickr-api/application"
+	"github.com/aaronland/go-flickr-api/client"
+	"github.com/aaronland/go-flickr-api/reader"
+	"github.com/aaronland/gocloud/runtimevar"
+	"github.com/mitchellh/go-wordwrap"
+	"github.com/sfomuseum/go-flags/flagset"
+	"github.com/sfomuseum/go-flags/multi"
 )
 
 var params multi.KeyValueString
@@ -68,12 +69,12 @@ func (app *UploadApplication) DefaultFlagSet() *flag.FlagSet {
 	fs.Var(&params, "param", "Zero or more {KEY}={VALUE} Flickr API parameters to include with your uploads.")
 
 	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Command-line tool for uploading one or more images to Flickr.\n\n")
+		fmt.Fprint(os.Stderr, "Command-line tool for uploading one or more images to Flickr.\n\n")
 		fmt.Fprintf(os.Stderr, "Usage:\n\t%s [options] path(N) path(N)\n\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "Valid options are:\n")
+		fmt.Fprint(os.Stderr, "Valid options are:\n")
 		fs.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nNotes:\n\n")
-		fmt.Fprintf(os.Stderr, wordwrap.WrapString("Under the hood the upload tool is using the GoCloud blob abstraction layer for reading files. By default only local files the file:// URI scheme are supported. If you need to read files from other sources you will need to clone this application and import the relevant packages. As a convenience if no URI scheme is included then each path will be resolved to its absolute URI and prepended with file://.\n", 80))
+		fmt.Fprint(os.Stderr, "\nNotes:\n\n")
+		fmt.Fprint(os.Stderr, wordwrap.WrapString("Under the hood the upload tool is using the GoCloud blob abstraction layer for reading files. By default only local files the file:// URI scheme are supported. If you need to read files from other sources you will need to clone this application and import the relevant packages. As a convenience if no URI scheme is included then each path will be resolved to its absolute URI and prepended with file://.\n", 80))
 
 		fmt.Fprintf(os.Stderr, "\n")
 	}

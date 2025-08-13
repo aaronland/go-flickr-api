@@ -94,7 +94,11 @@ type StartAutomationExecutionInput struct {
 	//
 	//   - Key=OS,Value=Windows
 	//
-	// To add tags to an existing automation, use the AddTagsToResource operation.
+	// The Array Members maximum value is reported as 1000. This number includes
+	// capacity reserved for internal operations. When calling the
+	// StartAutomationExecution action, you can specify a maximum of 5 tags. You can,
+	// however, use the AddTagsToResourceaction to add up to a total of 50 tags to an existing
+	// automation configuration.
 	Tags []types.Tag
 
 	// A location is a combination of Amazon Web Services Regions and/or Amazon Web
@@ -203,6 +207,9 @@ func (c *Client) addOperationStartAutomationExecutionMiddlewares(stack *middlewa
 	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
+	if err = addCredentialSource(stack, options); err != nil {
+		return err
+	}
 	if err = addOpStartAutomationExecutionValidationMiddleware(stack); err != nil {
 		return err
 	}
@@ -222,6 +229,36 @@ func (c *Client) addOperationStartAutomationExecutionMiddlewares(stack *middlewa
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptExecution(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeSerialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterSerialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeSigning(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterSigning(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptTransmit(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeDeserialization(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAfterDeserialization(stack, options); err != nil {
 		return err
 	}
 	if err = addSpanInitializeStart(stack); err != nil {

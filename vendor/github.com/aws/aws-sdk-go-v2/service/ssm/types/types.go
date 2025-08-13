@@ -193,13 +193,14 @@ type AssociationDescription struct {
 
 	// Choose the parameter that will define how your automation will branch out. This
 	// target is required for associations that use an Automation runbook and target
-	// resources by using rate controls. Automation is a capability of Amazon Web
-	// Services Systems Manager.
+	// resources by using rate controls. Automation is a tool in Amazon Web Services
+	// Systems Manager.
 	AutomationTargetParameterName *string
 
 	// The names or Amazon Resource Names (ARNs) of the Change Calendar type documents
 	// your associations are gated under. The associations only run when that change
-	// calendar is open. For more information, see [Amazon Web Services Systems Manager Change Calendar].
+	// calendar is open. For more information, see [Amazon Web Services Systems Manager Change Calendar]in the Amazon Web Services Systems
+	// Manager User Guide.
 	//
 	// [Amazon Web Services Systems Manager Change Calendar]: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar
 	CalendarNames []string
@@ -284,9 +285,9 @@ type AssociationDescription struct {
 	// successfully, the association is NON-COMPLIANT .
 	//
 	// In MANUAL mode, you must specify the AssociationId as a parameter for the PutComplianceItems API
-	// operation. In this case, compliance data isn't managed by State Manager, a
-	// capability of Amazon Web Services Systems Manager. It is managed by your direct
-	// call to the PutComplianceItemsAPI operation.
+	// operation. In this case, compliance data isn't managed by State Manager, a tool
+	// in Amazon Web Services Systems Manager. It is managed by your direct call to the
+	// PutComplianceItemsAPI operation.
 	//
 	// By default, all associations use AUTO mode.
 	SyncCompliance AssociationSyncCompliance
@@ -477,7 +478,7 @@ type AssociationStatus struct {
 // Information about the association version.
 type AssociationVersionInfo struct {
 
-	// By default, when you create a new associations, the system runs it immediately
+	// By default, when you create new associations, the system runs it immediately
 	// after it is created and then according to the schedule you specified. Specify
 	// this option if you don't want an association to run immediately after you create
 	// it. This parameter isn't supported for rate expressions.
@@ -495,7 +496,8 @@ type AssociationVersionInfo struct {
 
 	// The names or Amazon Resource Names (ARNs) of the Change Calendar type documents
 	// your associations are gated under. The associations for this version only run
-	// when that Change Calendar is open. For more information, see [Amazon Web Services Systems Manager Change Calendar].
+	// when that Change Calendar is open. For more information, see [Amazon Web Services Systems Manager Change Calendar]in the Amazon Web
+	// Services Systems Manager User Guide.
 	//
 	// [Amazon Web Services Systems Manager Change Calendar]: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar
 	CalendarNames []string
@@ -565,9 +567,9 @@ type AssociationVersionInfo struct {
 	// successfully, the association is NON-COMPLIANT .
 	//
 	// In MANUAL mode, you must specify the AssociationId as a parameter for the PutComplianceItems API
-	// operation. In this case, compliance data isn't managed by State Manager, a
-	// capability of Amazon Web Services Systems Manager. It is managed by your direct
-	// call to the PutComplianceItemsAPI operation.
+	// operation. In this case, compliance data isn't managed by State Manager, a tool
+	// in Amazon Web Services Systems Manager. It is managed by your direct call to the
+	// PutComplianceItemsAPI operation.
 	//
 	// By default, all associations use AUTO mode.
 	SyncCompliance AssociationSyncCompliance
@@ -803,6 +805,37 @@ type AutomationExecutionFilter struct {
 	noSmithyDocumentSerde
 }
 
+// Information about the optional inputs that can be specified for an automation
+// execution preview.
+type AutomationExecutionInputs struct {
+
+	// Information about parameters that can be specified for the preview operation.
+	Parameters map[string][]string
+
+	// Information about the Amazon Web Services Regions and Amazon Web Services
+	// accounts targeted by the Automation execution preview operation.
+	TargetLocations []TargetLocation
+
+	// A publicly accessible URL for a file that contains the TargetLocations body.
+	// Currently, only files in presigned Amazon S3 buckets are supported.
+	TargetLocationsURL *string
+
+	// A key-value mapping of document parameters to target resources. Both Targets
+	// and TargetMaps can't be specified together.
+	TargetMaps []map[string][]string
+
+	// The name of the parameter used as the target resource for the rate-controlled
+	// execution. Required if you specify targets.
+	TargetParameterName *string
+
+	// Information about the resources that would be included in the actual runbook
+	// execution, if it were to be run. Both Targets and TargetMaps can't be specified
+	// together.
+	Targets []Target
+
+	noSmithyDocumentSerde
+}
+
 // Details about a specific Automation execution.
 type AutomationExecutionMetadata struct {
 
@@ -915,6 +948,41 @@ type AutomationExecutionMetadata struct {
 	noSmithyDocumentSerde
 }
 
+// Information about the results of the execution preview.
+type AutomationExecutionPreview struct {
+
+	// Information about the Amazon Web Services Regions targeted by the execution
+	// preview.
+	Regions []string
+
+	// Information about the type of impact a runbook step would have on a resource.
+	//
+	//   - Mutating : The runbook step would make changes to the targets through
+	//   actions that create, modify, or delete resources.
+	//
+	//   - Non_Mutating : The runbook step would retrieve data about resources but not
+	//   make changes to them. This category generally includes Describe* , List* ,
+	//   Get* , and similar read-only API actions.
+	//
+	//   - Undetermined : An undetermined step invokes executions performed by another
+	//   orchestration service like Lambda, Step Functions, or Amazon Web Services
+	//   Systems Manager Run Command. An undetermined step might also call a third-party
+	//   API. Systems Manager Automation doesn't know the outcome of the orchestration
+	//   processes or third-party API executions, so the results of the steps are
+	//   undetermined.
+	StepPreviews map[string]int32
+
+	// Information that provides a preview of what the impact of running the specified
+	// Automation runbook would be.
+	TargetPreviews []TargetPreview
+
+	// Information about the Amazon Web Services accounts that were included in the
+	// execution preview.
+	TotalAccounts int32
+
+	noSmithyDocumentSerde
+}
+
 // Defines the basic information about a patch baseline override.
 type BaselineOverride struct {
 
@@ -938,6 +1006,14 @@ type BaselineOverride struct {
 	// that should be applied to the managed nodes. The default value is false .
 	// Applies to Linux managed nodes only.
 	ApprovedPatchesEnableNonSecurity bool
+
+	// Indicates whether managed nodes for which there are available security-related
+	// patches that have not been approved by the baseline are being defined as
+	// COMPLIANT or NON_COMPLIANT . This option is specified when the
+	// CreatePatchBaseline or UpdatePatchBaseline commands are run.
+	//
+	// Applies to Windows Server managed nodes only.
+	AvailableSecurityUpdatesComplianceStatus PatchComplianceStatus
 
 	// A set of patch filters, typically used for approval rules.
 	GlobalFilters *PatchFilterGroup
@@ -1068,9 +1144,9 @@ type Command struct {
 	// The date and time the command was requested.
 	RequestedDateTime *time.Time
 
-	// The Identity and Access Management (IAM) service role that Run Command, a
-	// capability of Amazon Web Services Systems Manager, uses to act on your behalf
-	// when sending notifications about command status changes.
+	// The Identity and Access Management (IAM) service role that Run Command, a tool
+	// in Amazon Web Services Systems Manager, uses to act on your behalf when sending
+	// notifications about command status changes.
 	ServiceRole *string
 
 	// The status of the command.
@@ -1275,10 +1351,9 @@ type CommandInvocation struct {
 	// The time and date the request was sent to this managed node.
 	RequestedDateTime *time.Time
 
-	// The Identity and Access Management (IAM) service role that Run Command, a
-	// capability of Amazon Web Services Systems Manager, uses to act on your behalf
-	// when sending notifications about command status changes on a per managed node
-	// basis.
+	// The Identity and Access Management (IAM) service role that Run Command, a tool
+	// in Amazon Web Services Systems Manager, uses to act on your behalf when sending
+	// notifications about command status changes on a per managed node basis.
 	ServiceRole *string
 
 	// The URL to the plugin's StdErr file in Amazon Simple Storage Service (Amazon
@@ -1475,6 +1550,12 @@ type ComplianceExecutionSummary struct {
 	// The time the execution ran as a datetime object that is saved in the following
 	// format: yyyy-MM-dd'T'HH:mm:ss'Z'
 	//
+	// For State Manager associations, this timestamp represents when the compliance
+	// status was captured and reported by the Systems Manager service, not when the
+	// underlying association was actually executed on the managed node. To track
+	// actual association execution times, use the DescribeAssociationExecutionTargetscommand or check the association
+	// execution history in the Systems Manager console.
+	//
 	// This member is required.
 	ExecutionTime *time.Time
 
@@ -1502,6 +1583,13 @@ type ComplianceItem struct {
 
 	// A summary for the compliance item. The summary includes an execution ID, the
 	// execution type (for example, command), and the execution time.
+	//
+	// For State Manager associations, the ExecutionTime value represents when the
+	// compliance status was captured and aggregated by the Systems Manager service,
+	// not necessarily when the underlying association was executed on the managed
+	// node. State Manager updates compliance status for all associations on an
+	// instance whenever any association executes, which means multiple associations
+	// may show the same execution time even if they were executed at different times.
 	ExecutionSummary *ComplianceExecutionSummary
 
 	// An ID for the compliance item. For example, if the compliance item is a Windows
@@ -1636,10 +1724,18 @@ type CreateAssociationBatchRequestEntry struct {
 	// command.
 	AlarmConfiguration *AlarmConfiguration
 
-	// By default, when you create a new associations, the system runs it immediately
-	// after it is created and then according to the schedule you specified. Specify
-	// this option if you don't want an association to run immediately after you create
-	// it. This parameter isn't supported for rate expressions.
+	// By default, when you create a new association, the system runs it immediately
+	// after it is created and then according to the schedule you specified and when
+	// target changes are detected. Specify true for ApplyOnlyAtCronInterval if you
+	// want the association to run only according to the schedule you specified.
+	//
+	// For more information, see [Understanding when associations are applied to resources] and [>About target updates with Automation runbooks] in the Amazon Web Services Systems Manager User
+	// Guide.
+	//
+	// This parameter isn't supported for rate expressions.
+	//
+	// [Understanding when associations are applied to resources]: https://docs.aws.amazon.com/systems-manager/latest/userguide/state-manager-about.html#state-manager-about-scheduling
+	// [>About target updates with Automation runbooks]: https://docs.aws.amazon.com/systems-manager/latest/userguide/state-manager-about.html#runbook-target-updates
 	ApplyOnlyAtCronInterval bool
 
 	// Specify a descriptive name for the association.
@@ -1647,12 +1743,13 @@ type CreateAssociationBatchRequestEntry struct {
 
 	// Specify the target for the association. This target is required for
 	// associations that use an Automation runbook and target resources by using rate
-	// controls. Automation is a capability of Amazon Web Services Systems Manager.
+	// controls. Automation is a tool in Amazon Web Services Systems Manager.
 	AutomationTargetParameterName *string
 
 	// The names or Amazon Resource Names (ARNs) of the Change Calendar type documents
 	// your associations are gated under. The associations only run when that Change
-	// Calendar is open. For more information, see [Amazon Web Services Systems Manager Change Calendar].
+	// Calendar is open. For more information, see [Amazon Web Services Systems Manager Change Calendar]in the Amazon Web Services Systems
+	// Manager User Guide.
 	//
 	// [Amazon Web Services Systems Manager Change Calendar]: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar
 	CalendarNames []string
@@ -1737,9 +1834,9 @@ type CreateAssociationBatchRequestEntry struct {
 	// successfully, the association is NON-COMPLIANT .
 	//
 	// In MANUAL mode, you must specify the AssociationId as a parameter for the PutComplianceItems API
-	// operation. In this case, compliance data isn't managed by State Manager, a
-	// capability of Amazon Web Services Systems Manager. It is managed by your direct
-	// call to the PutComplianceItemsAPI operation.
+	// operation. In this case, compliance data isn't managed by State Manager, a tool
+	// in Amazon Web Services Systems Manager. It is managed by your direct call to the
+	// PutComplianceItemsAPI operation.
 	//
 	// By default, all associations use AUTO mode.
 	SyncCompliance AssociationSyncCompliance
@@ -1754,6 +1851,34 @@ type CreateAssociationBatchRequestEntry struct {
 
 	// The managed nodes targeted by the request.
 	Targets []Target
+
+	noSmithyDocumentSerde
+}
+
+// The temporary security credentials, which include an access key ID, a secret
+// access key, and a security (or session) token.
+type Credentials struct {
+
+	// The access key ID that identifies the temporary security credentials.
+	//
+	// This member is required.
+	AccessKeyId *string
+
+	// The datetime on which the current credentials expire.
+	//
+	// This member is required.
+	ExpirationTime *time.Time
+
+	// The secret access key that can be used to sign requests.
+	//
+	// This member is required.
+	SecretAccessKey *string
+
+	// The token that users must pass to the service API to use the temporary
+	// credentials.
+	//
+	// This member is required.
+	SessionToken *string
 
 	noSmithyDocumentSerde
 }
@@ -2230,6 +2355,44 @@ type EffectivePatch struct {
 	noSmithyDocumentSerde
 }
 
+// Information about the inputs for an execution preview.
+//
+// The following types satisfy this interface:
+//
+//	ExecutionInputsMemberAutomation
+type ExecutionInputs interface {
+	isExecutionInputs()
+}
+
+// Information about the optional inputs that can be specified for an automation
+// execution preview.
+type ExecutionInputsMemberAutomation struct {
+	Value AutomationExecutionInputs
+
+	noSmithyDocumentSerde
+}
+
+func (*ExecutionInputsMemberAutomation) isExecutionInputs() {}
+
+// Information about the changes that would be made if an execution were run.
+//
+// The following types satisfy this interface:
+//
+//	ExecutionPreviewMemberAutomation
+type ExecutionPreview interface {
+	isExecutionPreview()
+}
+
+// Information about the changes that would be made if an Automation workflow were
+// run.
+type ExecutionPreviewMemberAutomation struct {
+	Value AutomationExecutionPreview
+
+	noSmithyDocumentSerde
+}
+
+func (*ExecutionPreviewMemberAutomation) isExecutionPreview() {}
+
 // Describes a failed association.
 type FailedCreateAssociation struct {
 
@@ -2383,6 +2546,43 @@ type InstanceAssociationStatusInfo struct {
 	noSmithyDocumentSerde
 }
 
+// Details about a specific managed node.
+type InstanceInfo struct {
+
+	// The type of agent installed on the node.
+	AgentType *string
+
+	// The version number of the agent installed on the node.
+	AgentVersion *string
+
+	// The fully qualified host name of the managed node.
+	ComputerName *string
+
+	// The current status of the managed node.
+	InstanceStatus *string
+
+	// The IP address of the managed node.
+	IpAddress *string
+
+	// Indicates whether the node is managed by Systems Manager.
+	ManagedStatus ManagedStatus
+
+	// The name of the operating system platform running on your managed node.
+	PlatformName *string
+
+	// The operating system platform type of the managed node.
+	PlatformType PlatformType
+
+	// The version of the OS platform running on your managed node.
+	PlatformVersion *string
+
+	// The type of instance, either an EC2 instance or another supported machine type
+	// in a hybrid fleet.
+	ResourceType ResourceType
+
+	noSmithyDocumentSerde
+}
+
 // Describes a filter for a specific list of managed nodes.
 type InstanceInformation struct {
 
@@ -2510,7 +2710,7 @@ type InstanceInformationStringFilter struct {
 	// The filter key name to describe your managed nodes.
 	//
 	// Valid filter key values: ActivationIds | AgentVersion | AssociationStatus |
-	// IamRole | InstanceIds | PingStatus | PlatformTypes | ResourceType | SourceIds |
+	// IamRole | InstanceIds | PingStatus | PlatformType | ResourceType | SourceIds |
 	// SourceTypes | "tag-key" | "tag: {keyname}
 	//
 	//   - Valid values for the AssociationStatus filter key: Success | Pending | Failed
@@ -2579,6 +2779,14 @@ type InstancePatchState struct {
 	//
 	// This member is required.
 	PatchGroup *string
+
+	// The number of security-related patches that are available but not approved
+	// because they didn't meet the patch baseline requirements. For example, an
+	// updated version of a patch might have been released before the specified
+	// auto-approval period was over.
+	//
+	// Applies to Windows Server managed nodes only.
+	AvailableSecurityUpdateCount *int32
 
 	// The number of patches per node that are specified as Critical for compliance
 	// reporting in the patch baseline aren't installed. These patches might be
@@ -2672,8 +2880,8 @@ type InstancePatchState struct {
 	SnapshotId *string
 
 	// The number of patches beyond the supported limit of NotApplicableCount that
-	// aren't reported by name to Inventory. Inventory is a capability of Amazon Web
-	// Services Systems Manager.
+	// aren't reported by name to Inventory. Inventory is a tool in Amazon Web Services
+	// Systems Manager.
 	UnreportedNotApplicableCount *int32
 
 	noSmithyDocumentSerde
@@ -2794,7 +3002,8 @@ type InstanceProperty struct {
 	// The name of the operating system platform running on your managed node.
 	PlatformName *string
 
-	// The operating system platform type of the managed node. For example, Windows.
+	// The operating system platform type of the managed node. For example, Windows
+	// Server or Amazon Linux 2.
 	PlatformType PlatformType
 
 	// The version of the OS platform running on your managed node.
@@ -2931,6 +3140,32 @@ type InventoryDeletionSummaryItem struct {
 }
 
 // One or more filters. Use a filter to return a more specific list of results.
+//
+// Example formats for the aws ssm get-inventory command:
+//
+//	--filters
+//	Key=AWS:InstanceInformation.AgentType,Values=amazon-ssm-agent,Type=Equal
+//
+//	--filters Key=AWS:InstanceInformation.AgentVersion,Values=3.3.2299.0,Type=Equal
+//
+//	--filters
+//	Key=AWS:InstanceInformation.ComputerName,Values=ip-192.0.2.0.us-east-2.compute.internal,Type=Equal
+//
+//	--filters
+//	Key=AWS:InstanceInformation.InstanceId,Values=i-0a4cd6ceffEXAMPLE,i-1a2b3c4d5e6EXAMPLE,Type=Equal
+//
+//	--filters Key=AWS:InstanceInformation.InstanceStatus,Values=Active,Type=Equal
+//
+//	--filters Key=AWS:InstanceInformation.IpAddress,Values=198.51.100.0,Type=Equal
+//
+//	--filters Key=AWS:InstanceInformation.PlatformName,Values="Amazon
+//	Linux",Type=Equal
+//
+//	--filters Key=AWS:InstanceInformation.PlatformType,Values=Linux,Type=Equal
+//
+//	--filters Key=AWS:InstanceInformation.PlatformVersion,Values=2023,Type=BeginWith
+//
+//	--filters Key=AWS:InstanceInformation.ResourceType,Values=EC2Instance,Type=Equal
 type InventoryFilter struct {
 
 	// The name of the filter key.
@@ -2938,9 +3173,7 @@ type InventoryFilter struct {
 	// This member is required.
 	Key *string
 
-	// Inventory filter values. Example: inventory filter where managed node IDs are
-	// specified as values Key=AWS:InstanceInformation.InstanceId,Values=
-	// i-a12b3c4d5e6g, i-1a2b3c4d5e6,Type=Equal .
+	// Inventory filter values.
 	//
 	// This member is required.
 	Values []string
@@ -3673,6 +3906,111 @@ type MetadataValue struct {
 	noSmithyDocumentSerde
 }
 
+// Details about an individual managed node.
+type Node struct {
+
+	// The UTC timestamp for when the managed node data was last captured.
+	CaptureTime *time.Time
+
+	// The ID of the managed node.
+	Id *string
+
+	// Information about the type of node.
+	NodeType NodeType
+
+	// Information about the ownership of the managed node.
+	Owner *NodeOwnerInfo
+
+	// The Amazon Web Services Region that a managed node was created in or assigned
+	// to.
+	Region *string
+
+	noSmithyDocumentSerde
+}
+
+// One or more aggregators for viewing counts of nodes using different dimensions.
+type NodeAggregator struct {
+
+	// The aggregator type for limiting a node summary. Currently, only Count is
+	// supported.
+	//
+	// This member is required.
+	AggregatorType NodeAggregatorType
+
+	// The name of a node attribute on which to limit the count of nodes.
+	//
+	// This member is required.
+	AttributeName NodeAttributeName
+
+	// The data type name to use for viewing counts of nodes. Currently, only Instance
+	// is supported.
+	//
+	// This member is required.
+	TypeName NodeTypeName
+
+	// Information about aggregators used to refine a node summary.
+	Aggregators []NodeAggregator
+
+	noSmithyDocumentSerde
+}
+
+// The filters for the operation.
+type NodeFilter struct {
+
+	// The name of the filter.
+	//
+	// This member is required.
+	Key NodeFilterKey
+
+	// A filter value supported by the specified key. For example, for the key
+	// PlatformType , supported values include Linux and Windows .
+	//
+	// This member is required.
+	Values []string
+
+	// The type of filter operator.
+	Type NodeFilterOperatorType
+
+	noSmithyDocumentSerde
+}
+
+// Information about ownership of a managed node.
+type NodeOwnerInfo struct {
+
+	// The ID of the Amazon Web Services account that owns the managed node.
+	AccountId *string
+
+	// The ID of the organization unit (OU) that the account is part of.
+	OrganizationalUnitId *string
+
+	// The path for the organizational unit (OU) that owns the managed node. The path
+	// for the OU is built using the IDs of the organization, root, and all OUs in the
+	// path down to and including the OU. For example:
+	//
+	//     o-a1b2c3d4e5/r-f6g7h8i9j0example/ou-ghi0-awsccccc/ou-jkl0-awsddddd/
+	OrganizationalUnitPath *string
+
+	noSmithyDocumentSerde
+}
+
+// Information about a managed node's type.
+//
+// The following types satisfy this interface:
+//
+//	NodeTypeMemberInstance
+type NodeType interface {
+	isNodeType()
+}
+
+// Information about a specific managed node.
+type NodeTypeMemberInstance struct {
+	Value InstanceInfo
+
+	noSmithyDocumentSerde
+}
+
+func (*NodeTypeMemberInstance) isNodeType() {}
+
 // A summary of resources that aren't compliant. The summary is organized
 // according to resource type.
 type NonCompliantSummary struct {
@@ -4333,8 +4671,8 @@ type ParameterInlinePolicy struct {
 	// The JSON text of the policy.
 	PolicyText *string
 
-	// The type of policy. Parameter Store, a capability of Amazon Web Services
-	// Systems Manager, supports the following policy types: Expiration,
+	// The type of policy. Parameter Store, a tool in Amazon Web Services Systems
+	// Manager, supports the following policy types: Expiration,
 	// ExpirationNotification, and NoChangeNotification.
 	PolicyType *string
 
@@ -4345,7 +4683,7 @@ type ParameterInlinePolicy struct {
 // user to update the parameter and the date and time the parameter was last used.
 type ParameterMetadata struct {
 
-	// The (ARN) of the last user to update the parameter.
+	// The Amazon Resource Name (ARN) of the parameter.
 	ARN *string
 
 	// A parameter name can include only the following letters and symbols.
@@ -4786,7 +5124,9 @@ type PatchRuleGroup struct {
 // only.
 type PatchSource struct {
 
-	// The value of the yum repo configuration. For example:
+	// The value of the repo configuration.
+	//
+	// Example for yum repositories
 	//
 	//     [main]
 	//
@@ -4797,9 +5137,22 @@ type PatchSource struct {
 	//     enabled=1
 	//
 	// For information about other options available for your yum repository
-	// configuration, see [dnf.conf(5)].
+	// configuration, see [dnf.conf(5)]on the man7.org website.
+	//
+	// Examples for Ubuntu Server and Debian Server
+	//
+	//     deb http://security.ubuntu.com/ubuntu jammy main
+	//
+	//     deb https://site.example.com/debian distribution component1 component2
+	//     component3
+	//
+	// Repo information for Ubuntu Server repositories must be specifed in a single
+	// line. For more examples and information, see [jammy (5) sources.list.5.gz]on the Ubuntu Server Manuals
+	// website and [sources.list format]on the Debian Wiki.
 	//
 	// [dnf.conf(5)]: https://man7.org/linux/man-pages/man5/dnf.conf.5.html
+	// [jammy (5) sources.list.5.gz]: https://manpages.ubuntu.com/manpages/jammy/man5/sources.list.5.html
+	// [sources.list format]: https://wiki.debian.org/SourcesList#sources.list_format
 	//
 	// This member is required.
 	Configuration *string
@@ -5314,6 +5667,12 @@ type ServiceSetting struct {
 // Information about a Session Manager connection to a managed node.
 type Session struct {
 
+	// Standard access type is the default for Session Manager sessions. JustInTime is
+	// the access type for [Just-in-time node access].
+	//
+	// [Just-in-time node access]: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-just-in-time-node-access.html
+	AccessType AccessType
+
 	// Reserved for future use.
 	Details *string
 
@@ -5580,7 +5939,7 @@ type Tag struct {
 //
 // Supported formats include the following.
 //
-// For all Systems Manager capabilities:
+// For all Systems Manager tools:
 //
 //   - Key=tag-key,Values=tag-value-1,tag-value-2
 //
@@ -5699,4 +6058,30 @@ type TargetLocation struct {
 	noSmithyDocumentSerde
 }
 
+// Information about the resources that would be included in the actual runbook
+// execution, if it were to be run.
+type TargetPreview struct {
+
+	// The number of resources of a certain type included in an execution preview.
+	Count int32
+
+	// A type of resource that was included in the execution preview.
+	TargetType *string
+
+	noSmithyDocumentSerde
+}
+
 type noSmithyDocumentSerde = smithydocument.NoSerde
+
+// UnknownUnionMember is returned when a union member is returned over the wire,
+// but has an unknown tag.
+type UnknownUnionMember struct {
+	Tag   string
+	Value []byte
+
+	noSmithyDocumentSerde
+}
+
+func (*UnknownUnionMember) isExecutionInputs()  {}
+func (*UnknownUnionMember) isExecutionPreview() {}
+func (*UnknownUnionMember) isNodeType()         {}

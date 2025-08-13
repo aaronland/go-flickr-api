@@ -1,9 +1,10 @@
 package oauth1
 
 import (
+	"net/http"
+
 	"github.com/aaronland/go-flickr-api/auth"
-	"github.com/aaronland/go-http-sanitize"
-	gohttp "net/http"
+	"github.com/aaronland/go-http/v3/sanitize"
 )
 
 // Return a new HTTP handler to receive a process OAuth1 authorization callback requests. This handler will
@@ -11,21 +12,21 @@ import (
 // This handler is used to create a background HTTP server process that can block execution of a command-line
 // OAuth1 authorization "www" flow until either a token or an error is dispatched to its corresponding channel
 // in the application code.
-func NewAuthorizationTokenHandlerWithChannels(token_ch chan auth.AuthorizationToken, err_ch chan error) (gohttp.Handler, error) {
+func NewAuthorizationTokenHandlerWithChannels(token_ch chan auth.AuthorizationToken, err_ch chan error) (http.Handler, error) {
 
-	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
+	fn := func(rsp http.ResponseWriter, req *http.Request) {
 
 		token, err := sanitize.GetString(req, "oauth_token")
 
 		if err != nil {
-			gohttp.Error(rsp, "Missing ?oauth_token parameter", gohttp.StatusBadRequest)
+			http.Error(rsp, "Missing ?oauth_token parameter", http.StatusBadRequest)
 			return
 		}
 
 		verifier, err := sanitize.GetString(req, "oauth_verifier")
 
 		if err != nil {
-			gohttp.Error(rsp, "Missing ?oauth_verifier parameter", gohttp.StatusBadRequest)
+			http.Error(rsp, "Missing ?oauth_verifier parameter", http.StatusBadRequest)
 			return
 		}
 
@@ -40,5 +41,5 @@ func NewAuthorizationTokenHandlerWithChannels(token_ch chan auth.AuthorizationTo
 		return
 	}
 
-	return gohttp.HandlerFunc(fn), nil
+	return http.HandlerFunc(fn), nil
 }
