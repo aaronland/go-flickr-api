@@ -39,6 +39,6 @@ func (fi *apiFileInfo) IsDir() bool {
 }
 
 // underlying data source (can return nil)
-func (fi *apiFileInfo) Sys() interface{} {
+func (fi *apiFileInfo) Sys() any {
 	return nil
 }

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/aaronland/go-flickr-api/auth"
-	"github.com/aaronland/go-http/v3/sanitize"
+	"github.com/aaronland/go-http/v4/sanitize"
 )
 
 // Return a new HTTP handler to receive a process OAuth1 authorization callback requests. This handler will

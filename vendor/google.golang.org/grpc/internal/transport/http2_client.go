@@ -370,7 +370,7 @@ func NewHTTP2Client(connectCtx, ctx context.Context, addr resolver.Address, opts
 		})
 	t.logger = prefixLoggerForClientTransport(t)
 	// Add peer information to the http2client context.
-	t.ctx = peer.NewContext(t.ctx, t.Peer())
+	t.ctx = peer.NewContext(t.ctx, t.getPeer())
 
 	if md, ok := addr.Metadata.(*metadata.MD); ok {
 		t.md = *md
@@ -478,7 +478,7 @@ func NewHTTP2Client(connectCtx, ctx context.Context, addr resolver.Address, opts
 	return t, nil
 }
 
-func (t *http2Client) newStream(ctx context.Context, callHdr *CallHdr, handler stats.Handler) *ClientStream {
+func (t *http2Client) newStream(ctx context.Context, callHdr *CallHdr) *ClientStream {
 	// TODO(zhaoq): Handle uint32 overflow of Stream.id.
 	s := &ClientStream{
 		Stream: Stream{
@@ -486,11 +486,10 @@ func (t *http2Client) newStream(ctx context.Context, callHdr *CallHdr, handler s
 			sendCompress:   callHdr.SendCompress,
 			contentSubtype: callHdr.ContentSubtype,
 		},
-		ct:           t,
-		done:         make(chan struct{}),
-		headerChan:   make(chan struct{}),
-		doneFunc:     callHdr.DoneFunc,
-		statsHandler: handler,
+		ct:         t,
+		done:       make(chan struct{}),
+		headerChan: make(chan struct{}),
+		doneFunc:   callHdr.DoneFunc,
 	}
 	s.Stream.buf.init()
 	s.Stream.wq.init(defaultWriteQuota, s.done)
@@ -511,7 +510,7 @@ func (t *http2Client) newStream(ctx context.Context, callHdr *CallHdr, handler s
 	return s
 }
 
-func (t *http2Client) Peer() *peer.Peer {
+func (t *http2Client) getPeer() *peer.Peer {
 	return &peer.Peer{
 		Addr:      t.remoteAddr,
 		AuthInfo:  t.authInfo, // Can be nil
@@ -552,9 +551,6 @@ func (t *http2Client) createHeaderFields(ctx context.Context, callHdr *CallHdr) 
 	hfLen := 7 // :method, :scheme, :path, :authority, content-type, user-agent, te
 	hfLen += len(authData) + len(callAuthData)
 	registeredCompressors := t.registeredCompressors
-	if callHdr.AcceptedCompressors != nil {
-		registeredCompressors = *callHdr.AcceptedCompressors
-	}
 	if callHdr.PreviousAttempts > 0 {
 		hfLen++
 	}
@@ -745,8 +741,8 @@ func (e NewStreamError) Error() string {
 
 // NewStream creates a stream and registers it into the transport as "active"
 // streams.  All non-nil errors returned will be *NewStreamError.
-func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr, handler stats.Handler) (*ClientStream, error) {
-	ctx = peer.NewContext(ctx, t.Peer())
+func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr) (*ClientStream, error) {
+	ctx = peer.NewContext(ctx, t.getPeer())
 
 	// ServerName field of the resolver returned address takes precedence over
 	// Host field of CallHdr to determine the :authority header. This is because,
@@ -782,7 +778,7 @@ func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr, handler s
 	if err != nil {
 		return nil, &NewStreamError{Err: err, AllowTransparentRetry: false}
 	}
-	s := t.newStream(ctx, callHdr, handler)
+	s := t.newStream(ctx, callHdr)
 	cleanup := func(err error) {
 		if s.swapState(streamDone) == streamDone {
 			// If it was already done, return.
@@ -903,7 +899,7 @@ func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr, handler s
 			return nil, &NewStreamError{Err: ErrConnClosing, AllowTransparentRetry: true}
 		}
 	}
-	if s.statsHandler != nil {
+	if t.statsHandler != nil {
 		header, ok := metadata.FromOutgoingContext(ctx)
 		if ok {
 			header.Set("user-agent", t.userAgent)
@@ -912,7 +908,7 @@ func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr, handler s
 		}
 		// Note: The header fields are compressed with hpack after this call returns.
 		// No WireLength field is set here.
-		s.statsHandler.HandleRPC(s.ctx, &stats.OutHeader{
+		t.statsHandler.HandleRPC(s.ctx, &stats.OutHeader{
 			Client:      true,
 			FullMethod:  callHdr.Method,
 			RemoteAddr:  t.remoteAddr,
@@ -1489,7 +1485,7 @@ func (t *http2Client) operateHeaders(frame *http2.MetaHeadersFrame) {
 		case "grpc-status":
 			code, err := strconv.ParseInt(hf.Value, 10, 32)
 			if err != nil {
-				se := status.New(codes.Unknown, fmt.Sprintf("transport: malformed grpc-status: %v", err))
+				se := status.New(codes.Internal, fmt.Sprintf("transport: malformed grpc-status: %v", err))
 				t.closeStream(s, se.Err(), true, http2.ErrCodeProtocol, se, nil, endStream)
 				return
 			}
@@ -1588,16 +1584,16 @@ func (t *http2Client) operateHeaders(frame *http2.MetaHeadersFrame) {
 		}
 	}
 
-	if s.statsHandler != nil {
+	if t.statsHandler != nil {
 		if !endStream {
-			s.statsHandler.HandleRPC(s.ctx, &stats.InHeader{
+			t.statsHandler.HandleRPC(s.ctx, &stats.InHeader{
 				Client:      true,
 				WireLength:  int(frame.Header().Length),
 				Header:      metadata.MD(mdata).Copy(),
 				Compression: s.recvCompress,
 			})
 		} else {
-			s.statsHandler.HandleRPC(s.ctx, &stats.InTrailer{
+			t.statsHandler.HandleRPC(s.ctx, &stats.InTrailer{
 				Client:     true,
 				WireLength: int(frame.Header().Length),
 				Trailer:    metadata.MD(mdata).Copy(),
@@ -1810,6 +1806,8 @@ func (t *http2Client) socketMetrics() *channelz.EphemeralSocketMetrics {
 		RemoteFlowControlWindow: t.getOutFlowWindow(),
 	}
 }
+
+func (t *http2Client) RemoteAddr() net.Addr { return t.remoteAddr }
 
 func (t *http2Client) incrMsgSent() {
 	if channelz.IsOn() {

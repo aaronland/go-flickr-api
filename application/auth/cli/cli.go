@@ -14,7 +14,7 @@ import (
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/http/oauth1"
-	"github.com/aaronland/go-http/v3/server"
+	"github.com/aaronland/go-http/v4/server"
 	"github.com/aaronland/gocloud/runtimevar"
 	"github.com/mitchellh/go-wordwrap"
 	"github.com/sfomuseum/go-flags/flagset"
@@ -58,13 +58,13 @@ func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 }
 
 // Invoke the AuthApplication with its default FlagSet.
-func (app *AuthApplication) Run(ctx context.Context) (interface{}, error) {
+func (app *AuthApplication) Run(ctx context.Context) (any, error) {
 	fs := app.DefaultFlagSet()
 	return app.RunWithFlagSet(ctx, fs)
 }
 
 // Invoke the AuthApplication with a custom FlagSet.
-func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (interface{}, error) {
+func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (any, error) {
 
 	flagset.Parse(fs)
 
