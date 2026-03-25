@@ -52,13 +52,13 @@ func (app *APIApplication) DefaultFlagSet() *flag.FlagSet {
 }
 
 // Invoke the APIApplication with its default FlagSet.
-func (app *APIApplication) Run(ctx context.Context) (interface{}, error) {
+func (app *APIApplication) Run(ctx context.Context) (any, error) {
 	fs := app.DefaultFlagSet()
 	return app.RunWithFlagSet(ctx, fs)
 }
 
 // Invoke the APIApplication with a custom FlagSet.
-func (app *APIApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (interface{}, error) {
+func (app *APIApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (any, error) {
 
 	flagset.Parse(fs)
 

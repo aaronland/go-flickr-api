@@ -90,7 +90,7 @@ type Application interface {
 	// Return the default FlagSet necessary for the application to run.
 	DefaultFlagSet() *flag.FlagSet
 	// Invoke the application with its default FlagSet.
-	Run(context.Context) (interface{}, error)
+	Run(context.Context) (any, error)
 	// Invoke the application with a custom FlagSet.
-	RunWithFlagSet(context.Context, *flag.FlagSet) (interface{}, error)
+	RunWithFlagSet(context.Context, *flag.FlagSet) (any, error)
 }

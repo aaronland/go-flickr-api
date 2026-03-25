@@ -53,13 +53,13 @@ func (app *ReplaceApplication) DefaultFlagSet() *flag.FlagSet {
 }
 
 // Invoke the ReplaceApplication with its default FlagSet.
-func (app *ReplaceApplication) Run(ctx context.Context) (interface{}, error) {
+func (app *ReplaceApplication) Run(ctx context.Context) (any, error) {
 	fs := app.DefaultFlagSet()
 	return app.RunWithFlagSet(ctx, fs)
 }
 
 // Invoke the ReplaceApplication with a custom FlagSet.
-func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (interface{}, error) {
+func (app *ReplaceApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (any, error) {
 
 	flagset.Parse(fs)
 

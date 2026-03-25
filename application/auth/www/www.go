@@ -57,13 +57,13 @@ func (app *AuthApplication) DefaultFlagSet() *flag.FlagSet {
 }
 
 // Invoke the AuthApplication with its default FlagSet.
-func (app *AuthApplication) Run(ctx context.Context) (interface{}, error) {
+func (app *AuthApplication) Run(ctx context.Context) (any, error) {
 	fs := app.DefaultFlagSet()
 	return app.RunWithFlagSet(ctx, fs)
 }
 
 // Invoke the AuthApplication with a custom FlagSet.
-func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (interface{}, error) {
+func (app *AuthApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (any, error) {
 
 	flagset.Parse(fs)
 

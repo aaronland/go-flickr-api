@@ -83,13 +83,13 @@ func (app *UploadApplication) DefaultFlagSet() *flag.FlagSet {
 }
 
 // Invoke the UploadApplication with its default FlagSet.
-func (app *UploadApplication) Run(ctx context.Context) (interface{}, error) {
+func (app *UploadApplication) Run(ctx context.Context) (any, error) {
 	fs := app.DefaultFlagSet()
 	return app.RunWithFlagSet(ctx, fs)
 }
 
 // Invoke the UploadApplication with a custom FlagSet.
-func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (interface{}, error) {
+func (app *UploadApplication) RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) (any, error) {
 
 	flagset.Parse(fs)
 
