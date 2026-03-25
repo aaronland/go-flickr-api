@@ -10,7 +10,7 @@ import (
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/response"
-	"github.com/aaronland/go-http/v3/sanitize"
+	"github.com/aaronland/go-http/v4/sanitize"
 	"gocloud.dev/docstore"
 )
 

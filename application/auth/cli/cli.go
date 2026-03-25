@@ -14,7 +14,7 @@ import (
 	"github.com/aaronland/go-flickr-api/auth"
 	"github.com/aaronland/go-flickr-api/client"
 	"github.com/aaronland/go-flickr-api/http/oauth1"
-	"github.com/aaronland/go-http/v3/server"
+	"github.com/aaronland/go-http/v4/server"
 	"github.com/aaronland/gocloud/runtimevar"
 	"github.com/mitchellh/go-wordwrap"
 	"github.com/sfomuseum/go-flags/flagset"
