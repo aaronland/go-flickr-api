@@ -4,8 +4,9 @@ package cognitoidentity
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/schemas"
+	smithy "github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"time"
 )
 
@@ -39,6 +40,18 @@ type DescribeIdentityInput struct {
 	noSmithyDocumentSerde
 }
 
+func (v *DescribeIdentityInput) Serialize(s smithy.ShapeSerializer) {
+	s.WriteStruct(schemas.DescribeIdentityInput)
+	v.SerializeMembers(s)
+	s.CloseStruct()
+}
+
+func (v *DescribeIdentityInput) SerializeMembers(s smithy.ShapeSerializer) {
+	if v.IdentityId != nil {
+		s.WriteString(schemas.DescribeIdentityInput_IdentityId, *v.IdentityId)
+	}
+}
+
 // A description of the identity.
 type DescribeIdentityOutput struct {
 
@@ -60,22 +73,50 @@ type DescribeIdentityOutput struct {
 	noSmithyDocumentSerde
 }
 
+func (v *DescribeIdentityOutput) Serialize(s smithy.ShapeSerializer) {
+	s.WriteStruct(schemas.IdentityDescription)
+	v.SerializeMembers(s)
+	s.CloseStruct()
+}
+
+func (v *DescribeIdentityOutput) SerializeMembers(s smithy.ShapeSerializer) {
+	if v.CreationDate != nil {
+		s.WriteTime(schemas.IdentityDescription_CreationDate, *v.CreationDate)
+	}
+	if v.IdentityId != nil {
+		s.WriteString(schemas.IdentityDescription_IdentityId, *v.IdentityId)
+	}
+	if v.LastModifiedDate != nil {
+		s.WriteTime(schemas.IdentityDescription_LastModifiedDate, *v.LastModifiedDate)
+	}
+	serializeLoginsList(s, schemas.IdentityDescription_Logins, v.Logins)
+}
+func (v *DescribeIdentityOutput) Deserialize(d smithy.ShapeDeserializer) error {
+	return smithy.ReadStruct(d, schemas.IdentityDescription, func(s *smithy.Schema) error {
+		switch s {
+		case schemas.IdentityDescription_CreationDate:
+			v.CreationDate = new(time.Time)
+			return d.ReadTime(schemas.IdentityDescription_CreationDate, v.CreationDate)
+		case schemas.IdentityDescription_IdentityId:
+			v.IdentityId = new(string)
+			return d.ReadString(schemas.IdentityDescription_IdentityId, v.IdentityId)
+		case schemas.IdentityDescription_LastModifiedDate:
+			v.LastModifiedDate = new(time.Time)
+			return d.ReadTime(schemas.IdentityDescription_LastModifiedDate, v.LastModifiedDate)
+		case schemas.IdentityDescription_Logins:
+			return deserializeLoginsList(d, schemas.IdentityDescription_Logins, &v.Logins)
+		}
+		return nil
+	})
+}
 func (c *Client) addOperationDescribeIdentityMiddlewares(stack *middleware.Stack, options Options) (err error) {
-	err = stack.Serialize.Add(&awsAwsjson11_serializeOpDescribeIdentity{}, middleware.After)
-	if err != nil {
+	if err := stack.Serialize.Add(&serializeRequestMiddleware{options: &options, operationSchema: smithy.NewOperationSchema(schemas.DescribeIdentity, schemas.DescribeIdentityInput, schemas.IdentityDescription)}, middleware.After); err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpDescribeIdentity{}, middleware.After)
-	if err != nil {
+	if err := stack.Deserialize.Add(&deserializeResponseMiddleware{options: &options, operationSchema: smithy.NewOperationSchema(schemas.DescribeIdentity, schemas.DescribeIdentityInput, schemas.IdentityDescription), output: &DescribeIdentityOutput{}}, middleware.After); err != nil {
 		return err
 	}
 
-	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
-		return err
-	}
-	if err = addComputeContentLength(stack); err != nil {
-		return err
-	}
 	if err = addResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
@@ -85,19 +126,10 @@ func (c *Client) addOperationDescribeIdentityMiddlewares(stack *middleware.Stack
 	if err = addRecordResponseTiming(stack, options); err != nil {
 		return err
 	}
-	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
-	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpDescribeIdentityValidationMiddleware(stack); err != nil {
-		return err
-	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware(options.Region, "DescribeIdentity"), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -4,9 +4,10 @@ package cognitoidentity
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/schemas"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
+	smithy "github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 // Deletes identities from an identity pool. You can specify a list of 1-60
@@ -39,6 +40,16 @@ type DeleteIdentitiesInput struct {
 	noSmithyDocumentSerde
 }
 
+func (v *DeleteIdentitiesInput) Serialize(s smithy.ShapeSerializer) {
+	s.WriteStruct(schemas.DeleteIdentitiesInput)
+	v.SerializeMembers(s)
+	s.CloseStruct()
+}
+
+func (v *DeleteIdentitiesInput) SerializeMembers(s smithy.ShapeSerializer) {
+	serializeIdentityIdList(s, schemas.DeleteIdentitiesInput_IdentityIdsToDelete, v.IdentityIdsToDelete)
+}
+
 // Returned in response to a successful DeleteIdentities operation.
 type DeleteIdentitiesOutput struct {
 
@@ -52,22 +63,32 @@ type DeleteIdentitiesOutput struct {
 	noSmithyDocumentSerde
 }
 
+func (v *DeleteIdentitiesOutput) Serialize(s smithy.ShapeSerializer) {
+	s.WriteStruct(schemas.DeleteIdentitiesResponse)
+	v.SerializeMembers(s)
+	s.CloseStruct()
+}
+
+func (v *DeleteIdentitiesOutput) SerializeMembers(s smithy.ShapeSerializer) {
+	serializeUnprocessedIdentityIdList(s, schemas.DeleteIdentitiesResponse_UnprocessedIdentityIds, v.UnprocessedIdentityIds)
+}
+func (v *DeleteIdentitiesOutput) Deserialize(d smithy.ShapeDeserializer) error {
+	return smithy.ReadStruct(d, schemas.DeleteIdentitiesResponse, func(s *smithy.Schema) error {
+		switch s {
+		case schemas.DeleteIdentitiesResponse_UnprocessedIdentityIds:
+			return deserializeUnprocessedIdentityIdList(d, schemas.DeleteIdentitiesResponse_UnprocessedIdentityIds, &v.UnprocessedIdentityIds)
+		}
+		return nil
+	})
+}
 func (c *Client) addOperationDeleteIdentitiesMiddlewares(stack *middleware.Stack, options Options) (err error) {
-	err = stack.Serialize.Add(&awsAwsjson11_serializeOpDeleteIdentities{}, middleware.After)
-	if err != nil {
+	if err := stack.Serialize.Add(&serializeRequestMiddleware{options: &options, operationSchema: smithy.NewOperationSchema(schemas.DeleteIdentities, schemas.DeleteIdentitiesInput, schemas.DeleteIdentitiesResponse)}, middleware.After); err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpDeleteIdentities{}, middleware.After)
-	if err != nil {
+	if err := stack.Deserialize.Add(&deserializeResponseMiddleware{options: &options, operationSchema: smithy.NewOperationSchema(schemas.DeleteIdentities, schemas.DeleteIdentitiesInput, schemas.DeleteIdentitiesResponse), output: &DeleteIdentitiesOutput{}}, middleware.After); err != nil {
 		return err
 	}
 
-	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
-		return err
-	}
-	if err = addComputeContentLength(stack); err != nil {
-		return err
-	}
 	if err = addResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
@@ -77,19 +98,10 @@ func (c *Client) addOperationDeleteIdentitiesMiddlewares(stack *middleware.Stack
 	if err = addRecordResponseTiming(stack, options); err != nil {
 		return err
 	}
-	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
-	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpDeleteIdentitiesValidationMiddleware(stack); err != nil {
-		return err
-	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware(options.Region, "DeleteIdentities"), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

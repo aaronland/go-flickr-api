@@ -4,8 +4,9 @@ package cognitoidentity
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/schemas"
+	smithy "github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 // Registers (or retrieves) a Cognito IdentityId and an OpenID Connect token for a
@@ -82,6 +83,26 @@ type GetOpenIdTokenForDeveloperIdentityInput struct {
 	noSmithyDocumentSerde
 }
 
+func (v *GetOpenIdTokenForDeveloperIdentityInput) Serialize(s smithy.ShapeSerializer) {
+	s.WriteStruct(schemas.GetOpenIdTokenForDeveloperIdentityInput)
+	v.SerializeMembers(s)
+	s.CloseStruct()
+}
+
+func (v *GetOpenIdTokenForDeveloperIdentityInput) SerializeMembers(s smithy.ShapeSerializer) {
+	if v.IdentityId != nil {
+		s.WriteString(schemas.GetOpenIdTokenForDeveloperIdentityInput_IdentityId, *v.IdentityId)
+	}
+	if v.IdentityPoolId != nil {
+		s.WriteString(schemas.GetOpenIdTokenForDeveloperIdentityInput_IdentityPoolId, *v.IdentityPoolId)
+	}
+	serializeLoginsMap(s, schemas.GetOpenIdTokenForDeveloperIdentityInput_Logins, v.Logins)
+	serializePrincipalTags(s, schemas.GetOpenIdTokenForDeveloperIdentityInput_PrincipalTags, v.PrincipalTags)
+	if v.TokenDuration != nil {
+		s.WriteInt64(schemas.GetOpenIdTokenForDeveloperIdentityInput_TokenDuration, *v.TokenDuration)
+	}
+}
+
 // Returned in response to a successful GetOpenIdTokenForDeveloperIdentity request.
 type GetOpenIdTokenForDeveloperIdentityOutput struct {
 
@@ -97,22 +118,41 @@ type GetOpenIdTokenForDeveloperIdentityOutput struct {
 	noSmithyDocumentSerde
 }
 
+func (v *GetOpenIdTokenForDeveloperIdentityOutput) Serialize(s smithy.ShapeSerializer) {
+	s.WriteStruct(schemas.GetOpenIdTokenForDeveloperIdentityResponse)
+	v.SerializeMembers(s)
+	s.CloseStruct()
+}
+
+func (v *GetOpenIdTokenForDeveloperIdentityOutput) SerializeMembers(s smithy.ShapeSerializer) {
+	if v.IdentityId != nil {
+		s.WriteString(schemas.GetOpenIdTokenForDeveloperIdentityResponse_IdentityId, *v.IdentityId)
+	}
+	if v.Token != nil {
+		s.WriteString(schemas.GetOpenIdTokenForDeveloperIdentityResponse_Token, *v.Token)
+	}
+}
+func (v *GetOpenIdTokenForDeveloperIdentityOutput) Deserialize(d smithy.ShapeDeserializer) error {
+	return smithy.ReadStruct(d, schemas.GetOpenIdTokenForDeveloperIdentityResponse, func(s *smithy.Schema) error {
+		switch s {
+		case schemas.GetOpenIdTokenForDeveloperIdentityResponse_IdentityId:
+			v.IdentityId = new(string)
+			return d.ReadString(schemas.GetOpenIdTokenForDeveloperIdentityResponse_IdentityId, v.IdentityId)
+		case schemas.GetOpenIdTokenForDeveloperIdentityResponse_Token:
+			v.Token = new(string)
+			return d.ReadString(schemas.GetOpenIdTokenForDeveloperIdentityResponse_Token, v.Token)
+		}
+		return nil
+	})
+}
 func (c *Client) addOperationGetOpenIdTokenForDeveloperIdentityMiddlewares(stack *middleware.Stack, options Options) (err error) {
-	err = stack.Serialize.Add(&awsAwsjson11_serializeOpGetOpenIdTokenForDeveloperIdentity{}, middleware.After)
-	if err != nil {
+	if err := stack.Serialize.Add(&serializeRequestMiddleware{options: &options, operationSchema: smithy.NewOperationSchema(schemas.GetOpenIdTokenForDeveloperIdentity, schemas.GetOpenIdTokenForDeveloperIdentityInput, schemas.GetOpenIdTokenForDeveloperIdentityResponse)}, middleware.After); err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpGetOpenIdTokenForDeveloperIdentity{}, middleware.After)
-	if err != nil {
+	if err := stack.Deserialize.Add(&deserializeResponseMiddleware{options: &options, operationSchema: smithy.NewOperationSchema(schemas.GetOpenIdTokenForDeveloperIdentity, schemas.GetOpenIdTokenForDeveloperIdentityInput, schemas.GetOpenIdTokenForDeveloperIdentityResponse), output: &GetOpenIdTokenForDeveloperIdentityOutput{}}, middleware.After); err != nil {
 		return err
 	}
 
-	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
-		return err
-	}
-	if err = addComputeContentLength(stack); err != nil {
-		return err
-	}
 	if err = addResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
@@ -122,19 +162,10 @@ func (c *Client) addOperationGetOpenIdTokenForDeveloperIdentityMiddlewares(stack
 	if err = addRecordResponseTiming(stack, options); err != nil {
 		return err
 	}
-	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
-	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpGetOpenIdTokenForDeveloperIdentityValidationMiddleware(stack); err != nil {
-		return err
-	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware(options.Region, "GetOpenIdTokenForDeveloperIdentity"), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
